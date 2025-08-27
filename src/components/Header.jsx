@@ -28,7 +28,7 @@ export default function Header() {
   }, [])
 
   return (
-    <div className='flex justify-between py-8 px-16 h-[90px] bg-black'>
+    <div className='flex justify-between py-8 px-16 h-[90px] bg-[rgba(34,34,34,0.4)] z-99 relative'>
       <p className='leading-[25px] h-[65px] font-bold text-[32px] text-red-500 uppercase'>Movie</p>
       <ul className='flex gap-7'>
         <li className='inline-flex text-white text-[14px]'>Trang chủ</li>
