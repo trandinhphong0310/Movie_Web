@@ -23,19 +23,18 @@ export default function Banner() {
     }
 
     return (
-        <div>
+        <div className='relative w-full h-[870px] top-0'>
             <div
-                className='absolute -top-4.5 left-0 w-full h-[870px] 
-                bg-center bg-no-repeat bg-cover'
+                className='absolute inset-0 bg-center bg-no-repeat bg-cover'
                 style={{ backgroundImage: `linear-gradient(to right, rgba(34,31,31,0.6) 0%, rgba(34,31,31,0.4) 100%), url(${image})` }}
             >
             </div>
             <div className='absolute text-white w-[50%] top-[200px] left-[100px]'>
                 <h1 className='text-[62px] uppercase font-bold'>{movie.name}</h1>
                 <div className='flex gap-5 mb-[30px]'>
-                    <p className='mt-[10px] ml-[20px]'>{movie.quality}</p>
-                    <p className='mt-[10px] ml-[20px]'>{movie.time}</p>
-                    <p className='mt-[10px] ml-[20px]'>{movie.year}</p>
+                    <p className='mt-[10px] ml-[20px] px-4 py-2 bg-red-500'>{movie.quality}</p>
+                    <p className='mt-[10px] ml-[20px] py-2'>{movie.time}</p>
+                    <p className='mt-[10px] ml-[20px] py-2'>{movie.year}</p>
                 </div>
                 <span className=''>
                     <p className='mb-[30px] text-[18px] text-[#cecfd1]'>{movie.content}</p>
