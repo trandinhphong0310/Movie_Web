@@ -39,7 +39,8 @@ export default function Header() {
                bg-[#161616] rounded-none border-0 
                w-full max-w-[800px] shadow-[0_0_30px_0_rgba(22,22,22,0.1)] 
                left-[30%] top-[100px] z-[99] p-4 gap-2 transition
-               before:content-[''] before:absolute before:top-[-40px] before:left-[20%] before:w-20 before:h-30">
+               before:content-[''] before:absolute before:top-[-40px] before:left-0 
+                before:w-full before:h-[40px] before:bg-transparent">
             {genre.map((item) => (
               <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>{item.name}</li>
             ))}
@@ -52,7 +53,8 @@ export default function Header() {
                bg-[#161616] rounded-none border-0 
                w-full max-w-[800px] shadow-[0_0_30px_0_rgba(22,22,22,0.1)] 
                left-[30%] top-[100px] z-[99] p-4 gap-2 transition
-               before:content-[''] before:absolute before:top-[-40px] before:left-[33%] before:w-20 before:h-30">
+               before:content-[''] before:absolute before:top-[-40px] before:left-0 
+                before:w-full before:h-[40px] before:bg-transparent">
             {country.map((item) => (
               <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>{item.name}</li>
             ))}

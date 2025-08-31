@@ -42,3 +42,23 @@ export const getMoviesBySlug = async (slug) => {
         console.log(err)
     }
 }
+
+export const getMoviesBySlugCategory = async (slug) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
+        const data = await response.json()
+        return data.data.items
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const getMoviesBySlugCategory2 = async (slug) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
+        const data = await response.json()
+        return data.data
+    } catch (err) {
+        console.log(err)
+    }
+}

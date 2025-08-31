@@ -1,6 +1,7 @@
 import Banner from "./components/Banner"
 import Header from "./components/Header"
-import PopularMovies from "./components/PopularMovies"
+import MovieSection from "./components/container/MovieSection"
+import PopularMovies from "./components/container/PopularMovies"
 
 function App() {
 
@@ -9,6 +10,12 @@ function App() {
       <Header />
       <Banner />
       <PopularMovies />
+      <div className="flex flex-col rounded-2xl 
+      bg-gradient-to-t from-[rgba(40,43,58,1)] to-[rgba(40,43,58,0)] from-80% p-8 gap-8 mt-8">
+        <MovieSection slug={'phim-moi'}/>
+        <MovieSection slug={'phim-le'}/>
+        <MovieSection slug={'phim-bo'}/>
+      </div>
     </>
   )
 }
