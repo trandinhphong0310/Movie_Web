@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getMoviesBySlugCategory, getMoviesBySlugCategory2 } from '../../api/movie_api'
 
-export default function NewMovies({slug}) {
+export default function NewMovies({ slug }) {
     const [movie, setMovie] = useState([])
     const [movie2, setMovie2] = useState([])
     const base_url = import.meta.env.VITE_BASE_IMG_URL
@@ -35,8 +35,15 @@ export default function NewMovies({slug}) {
                     .slice(0, 5)
                     .map(item => (
                         <div key={item._id} className='movies-card_item'>
-                            <img src={`${base_url}/${item.poster_url}`} alt={item.name} />
+                            <div className='relative'>
+                                <img src={`${base_url}/${item.poster_url}`} alt={item.name} />
+                                <div className="absolute bottom-1 left-4">
+                                    <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : ""}</span>
+                                    <span className='movies-card_episode'>{item.episode_current}</span>
+                                </div>
+                            </div>
                             <h3 className='movies-card_name'>{item.name}</h3>
+                            <h4 className='text-[12px] text-[#aaaaaa]'>{item.origin_name}</h4>
                         </div>
                     ))}
             </div>

@@ -32,10 +32,15 @@ export default function PopularMovies() {
                                 className='w-full aspect-[2/3] object-cover rounded-lg'
                                 src={`${base_url}/${item.thumb_url}`}>
                             </img>
-                            <div className='bg-[#221f1f] p-[16px] rounded-md flex flex-col h-40'>
+                            <div className='bg-[#221f1f] p-[16px] rounded-md flex flex-col h-60 relative'>
                                 <h3 className='text-white text-[20px] line-clamp-2'>{item.name}</h3>
-                                <p className='text-[#cecfd1] text-[14px] mt-4'>{item.time}</p>
-                                <p className='text-[#cecfd1] text-[14px] mt-4'>{item.year}</p>
+                                <h4 className='text-[14px] text-[#aaaaaa] mt-4 mb-2'>{item.origin_name}</h4>
+                                <p className='movies-card_time'>{item.time}</p>
+                                <p className='movies-card_year'>{item.year}</p>
+                                <div className="movies-card-lang_episode">
+                                    <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : ""}</span>
+                                    <span className='movies-card_episode'>{item.episode_current}</span>
+                                </div>
                             </div>
                         </div>
                     ))}

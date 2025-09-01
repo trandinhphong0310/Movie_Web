@@ -28,4 +28,26 @@ body {
   .movies-card_name {
     @apply text-white text-[20px] line-clamp-2;
   }
+
+  .movies-card_time,
+  .movies-card_year {
+    @apply text-[#cecfd1] text-[14px] mt-4;
+  }
+
+  .movies-card-lang_episode {
+    @apply absolute bottom-61 left-4;
+  }
+
+  .movies-card_lang,
+  .movies-card_episode {
+    @apply text-white text-[11px] mt-4 px-3 py-2;
+  }
+  
+  .movies-card_lang {
+    @apply bg-[#5e6070] rounded-t-md;
+  }
+
+  .movies-card_episode {
+    @apply bg-[#2ca35d] rounded-t-md;
+  }
 }
