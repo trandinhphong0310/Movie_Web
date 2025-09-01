@@ -20,12 +20,7 @@ export const getMoviesCountry = async () => {
 
 export const getMoviesApi = async () => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/home`, {
-            headers: {
-                'accept': 'application/json',
-                'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}`
-            }
-        })
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/home`)
         const data = await response.json()
         return data.data.items
     } catch (err) {
@@ -33,16 +28,7 @@ export const getMoviesApi = async () => {
     }
 }
 
-export const getMoviesBySlug = async (slug) => {
-    try {
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/phim/${slug}`)
-        const data = await response.json()
-        return data.data.item
-    } catch (err) {
-        console.log(err)
-    }
-}
-
+// lay content phim
 export const getMoviesBySlugCategory = async (slug) => {
     try {
         const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
@@ -53,6 +39,7 @@ export const getMoviesBySlugCategory = async (slug) => {
     }
 }
 
+// lay title page
 export const getMoviesBySlugCategory2 = async (slug) => {
     try {
         const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
