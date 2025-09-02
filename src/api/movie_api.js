@@ -8,11 +8,31 @@ export const getMoviesGenre = async () => {
     }
 }
 
+export const getMoviesByGenre = async (slug) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/the-loai/${slug}`)
+        const data = await response.json()
+        return data.data
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 export const getMoviesCountry = async () => {
     try {
         const response = await fetch(`${import.meta.env.VITE_API_KEY}/quoc-gia`)
         const data = await response.json()
         return data.data.items
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const getMoviesByCountry = async (slug) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/quoc-gia/${slug}`)
+        const data = await response.json()
+        return data.data
     } catch (err) {
         console.log(err)
     }
@@ -45,6 +65,21 @@ export const getMoviesBySlugCategory2 = async (slug) => {
         const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
         const data = await response.json()
         return data.data
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const getRateMovies = async () => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/movie/movie_id/reviews?language=vi-VN&page=1`, {
+            headers: {
+                accept: "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_API_KEY_2}`
+            }
+        })
+        const data = await response.json()
+        return data.results
     } catch (err) {
         console.log(err)
     }

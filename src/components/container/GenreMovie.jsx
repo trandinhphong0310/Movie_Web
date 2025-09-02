@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from 'react'
-import { getMoviesApi } from '../../api/movie_api'
+import { getMoviesByGenre } from '../../api/movie_api'
+import { useParams } from 'react-router-dom'
 
-export default function PopularMovies() {
+export default function GenreMovie() {
 
-    const [movie, setMovie] = useState([])
+    const [movies, setMovies] = useState([])
+    const [title, setTitle] = useState('')
+    const { slug } = useParams()
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
     useEffect(() => {
-        getMoviesApi()
-            .then(item => {
-                if (item)
-                    setMovie(item)
+        getMoviesByGenre(slug)
+            .then(data => {
+                if (data) {
+                    setMovies(data.items)
+                    setTitle(data.seoOnPage?.titleHead || '')
+                }
             })
-    }, [])
+    }, [slug])
 
     return (
-        <div className='container mx-auto pt-[90px] pb-[60px]'>
-            <div className='flex justify-between items-center'>
-                <h2 className='font-semibold text-white text-[28px] py-4 uppercase'>Phim đề cử</h2>
-                <span className='right-0 py-4 hover:scale-105 transform transition duration-300 ease-in-out'>
-                    <button className='text-[#cecfd1] text-[16px] mt-4 cursor-pointer'>Xem tất cả</button>
-                </span>
+        <div className='container mx-auto pt-[90px]'>
+            <div>
+                <h2 className='font-semibold text-white text-[28px] py-4'>{title}</h2>
             </div>
             <div className='grid gap-6 lg:grid-cols-4 xl:grid-cols-6'>
-                {movie
-                    .filter(item => (item.imdb.vote_average >= 5 || item.tmdb.vote_average >= 5))
-                    .slice(0, 6)
+                {movies
                     .map(item => (
                         <div key={item._id} className='mt-4 cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out'>
                             <img

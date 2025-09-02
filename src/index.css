@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@tailwind components;
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
@@ -42,7 +41,7 @@ body {
   .movies-card_episode {
     @apply text-white text-[11px] mt-4 px-3 py-2;
   }
-  
+
   .movies-card_lang {
     @apply bg-[#5e6070] rounded-t-md;
   }
