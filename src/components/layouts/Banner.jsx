@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getMoviesBySlugCategory } from '../api/movie_api'
+import { getMoviesBySlugCategory } from '../../api/movie_api'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from 'react-slick'

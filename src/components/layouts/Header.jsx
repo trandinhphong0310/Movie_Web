@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { FaUser } from 'react-icons/fa'
 import { FaChevronDown } from 'react-icons/fa'
-import { getMoviesCountry, getMoviesGenre } from '../api/movie_api'
+import { getMoviesCountry, getMoviesGenre } from '../../api/movie_api'
+import { Link } from 'react-router-dom'
 
 export default function Header() {
 
   const [genre, setGenre] = useState([])
   const [country, setCountry] = useState([])
+  const [scroll, setScrolled] = useState(false)
 
   useEffect(() => {
     getMoviesGenre()
@@ -27,11 +29,28 @@ export default function Header() {
       })
   }, [])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if(window.scrollY > 50)
+        setScrolled(true)
+      else
+        setScrolled(false)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
   return (
-    <div className='flex justify-between py-8 px-16 h-[90px] bg-[rgba(34,34,34,0.4)] z-99 absolute w-full'>
+    <div className={`flex justify-between px-16 z-10 w-full fixed transition-all duration-300 ease-in-out
+    ${scroll ? 'bg-[#0f111a] h-[70px] py-5' : 'bg-[rgba(34,34,34,0.4)] h-[90px] py-8'}`}>
       <p className='leading-[25px] h-[65px] font-bold text-[32px] text-red-500 uppercase'>Movie</p>
       <ul className='flex gap-7'>
-        <li className='inline-flex text-white text-[14px]'>Trang chủ</li>
+        <li className='inline-flex text-white text-[14px]'>
+          <Link to="/">Trang chủ</Link>
+        </li>
         <li className='inline-flex text-white text-[14px] group cursor-pointer'>
           Thể loại<FaChevronDown className='text-white ml-2 h-[20px] w-[12px]' />
           <ul className="absolute grid grid-cols-4 opacity-0 invisible 
@@ -42,7 +61,9 @@ export default function Header() {
                before:content-[''] before:absolute before:top-[-40px] before:left-0 
                 before:w-full before:h-[40px] before:bg-transparent">
             {genre.map((item) => (
-              <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>{item.name}</li>
+              <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>
+                <Link to={`/the-loai/${item.slug}`}>{item.name}</Link>
+              </li>
             ))}
           </ul>
         </li>
@@ -56,7 +77,9 @@ export default function Header() {
                before:content-[''] before:absolute before:top-[-40px] before:left-0 
                 before:w-full before:h-[40px] before:bg-transparent">
             {country.map((item) => (
-              <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>{item.name}</li>
+              <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>
+                <Link to={`/quoc-gia/${item.slug}`}>{item.name}</Link>
+              </li>
             ))}
           </ul>
         </li>

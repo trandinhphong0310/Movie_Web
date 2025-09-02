@@ -38,7 +38,7 @@ export default function NewMovies({ slug }) {
                             <div className='relative'>
                                 <img src={`${base_url}/${item.poster_url}`} alt={item.name} />
                                 <div className="absolute bottom-1 left-4">
-                                    <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : ""}</span>
+                                    <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : "Ko P.Đề"}</span>
                                     <span className='movies-card_episode'>{item.episode_current}</span>
                                 </div>
                             </div>
