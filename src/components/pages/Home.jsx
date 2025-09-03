@@ -1,8 +1,6 @@
-import Header from "../layouts/Header";
 import Banner from "../layouts/Banner";
 import MovieSection from "../container/MovieSection";
 import PopularMovies from "../container/PopularMovies";
-import Footer from "../layouts/Footer";
 
 export default function Home() {
   return (
@@ -17,7 +15,7 @@ export default function Home() {
         <MovieSection slug="phim-le" />
         <MovieSection slug="phim-bo" />
       </div>
-      <Footer />
+      
     </>
   );
 }

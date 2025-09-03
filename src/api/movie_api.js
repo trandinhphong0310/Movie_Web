@@ -8,9 +8,9 @@ export const getMoviesGenre = async () => {
     }
 }
 
-export const getMoviesByGenre = async (slug) => {
+export const getMoviesByGenre = async (slug, page = 1, limit = 24) => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/the-loai/${slug}`)
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/the-loai/${slug}?page=${page}&limit=${limit}`)
         const data = await response.json()
         return data.data
     } catch (err) {
@@ -28,9 +28,9 @@ export const getMoviesCountry = async () => {
     }
 }
 
-export const getMoviesByCountry = async (slug) => {
+export const getMoviesByCountry = async (slug, page = 1, limit = 24) => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/quoc-gia/${slug}`)
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/quoc-gia/${slug}?page=${page}&limit=${limit}`)
         const data = await response.json()
         return data.data
     } catch (err) {
