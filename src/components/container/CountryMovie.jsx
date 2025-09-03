@@ -1,23 +1,37 @@
 import React, { useEffect, useState } from 'react'
 import { getMoviesByCountry } from '../../api/movie_api'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 export default function CountryMovie() {
 
     const [movies, setMovies] = useState([])
-    const [title, setTitle] = useState([])
+    const [title, setTitle] = useState('')
+    const [totalPage, setTotalPage] = useState(0)
+    const [searchParams, setSearchParams] = useSearchParams()
     const { slug } = useParams()
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
+    const page = Number(searchParams.get('page')) || 1
+    const limit = Number(searchParams.get('limit')) || 24
+
     useEffect(() => {
-        getMoviesByCountry(slug)
+        getMoviesByCountry(slug, page, limit)
             .then(data => {
                 if (data) {
                     setMovies(data.items)
                     setTitle(data.breadCrumb?.[0]?.name || '')
+                    setTotalPage(Math.ceil((data.params?.pagination?.totalItems || 0) / limit))
                 }
             })
-    }, [slug])
+    }, [slug, page, limit])
+
+    const handleNext = () => {
+        setSearchParams({ page: page + 1, limit })
+    }
+
+    const handlePrev = () => {
+        setSearchParams({ page: page - 1, limit })
+    }
 
     return (
         <div className='container mx-auto pt-[90px]'>
@@ -44,6 +58,26 @@ export default function CountryMovie() {
                             </div>
                         </div>
                     ))}
+            </div>
+            <div className="text-white flex justify-center gap-4 pt-20">
+                <button
+                    onClick={handlePrev} disabled={page === 1}
+                    className='bg-[#2f3346] size-[50px] rounded-3xl cursor-pointer'
+                >
+                    <i className='fa-solid fa-arrow-left'></i>
+                </button>
+                <span
+                    className='bg-[#2f3346] w-[160px] h-[50px] rounded-xl cursor-pointer flex items-center justify-center'
+                >
+                    Trang {page} / {totalPage}
+                </span>
+                <button
+                    onClick={handleNext}
+                    disabled={page >= totalPage}
+                    className='bg-[#2f3346] size-[50px] rounded-3xl cursor-pointer'
+                >
+                    <i className='fa-solid fa-arrow-right'></i>
+                </button>
             </div>
         </div>
     )

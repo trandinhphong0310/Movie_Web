@@ -62,7 +62,7 @@ export default function Header() {
                 before:w-full before:h-[40px] before:bg-transparent">
             {genre.map((item) => (
               <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>
-                <Link to={`/the-loai/${item.slug}`}>{item.name}</Link>
+                <Link to={`/the-loai/${item.slug}?page=1&limit=24`}>{item.name}</Link>
               </li>
             ))}
           </ul>
@@ -78,7 +78,7 @@ export default function Header() {
                 before:w-full before:h-[40px] before:bg-transparent">
             {country.map((item) => (
               <li key={item._id} className='text-[14px] p-2 hover:text-red-500 hover:shadow'>
-                <Link to={`/quoc-gia/${item.slug}`}>{item.name}</Link>
+                <Link to={`/quoc-gia/${item.slug}?page=1&limit=24`}>{item.name}</Link>
               </li>
             ))}
           </ul>
