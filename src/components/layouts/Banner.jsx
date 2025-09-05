@@ -6,16 +6,18 @@ import Slider from 'react-slick'
 
 export default function Banner() {
 
-    const [movie, setMovie] = useState(null)
+    const [movie, setMovie] = useState([])
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
     useEffect(() => {
         getMoviesBySlugCategory('phim-sap-chieu')
-            .then(item => {
-                if (item)
-                    setMovie(item.slice(0, 4))
+            .then(data => {
+                if (data)
+                    setMovie(data.items)
             })
     }, [])
+
+    
 
     const settings = {
         dots: true,

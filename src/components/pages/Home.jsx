@@ -15,7 +15,6 @@ export default function Home() {
         <MovieSection slug="phim-le" />
         <MovieSection slug="phim-bo" />
       </div>
-      
     </>
   );
 }

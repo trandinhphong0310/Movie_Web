@@ -48,21 +48,9 @@ export const getMoviesApi = async () => {
     }
 }
 
-// lay content phim
-export const getMoviesBySlugCategory = async (slug) => {
+export const getMoviesBySlugCategory = async (slug, page = 1, limit = 24) => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
-        const data = await response.json()
-        return data.data.items
-    } catch (err) {
-        console.log(err)
-    }
-}
-
-// lay title page
-export const getMoviesBySlugCategory2 = async (slug) => {
-    try {
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}`)
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/danh-sach/${slug}?page=${page}&limit=${limit}`)
         const data = await response.json()
         return data.data
     } catch (err) {
@@ -80,6 +68,16 @@ export const getRateMovies = async () => {
         })
         const data = await response.json()
         return data.results
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const searchMoviesByKeyWords = async (keywords) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/tim-kiem?keyword=${keywords}`)
+        const data = await response.json()
+        return data.data
     } catch (err) {
         console.log(err)
     }

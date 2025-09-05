@@ -1,15 +1,32 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { FaUser } from 'react-icons/fa'
 import { FaChevronDown } from 'react-icons/fa'
-import { getMoviesCountry, getMoviesGenre } from '../../api/movie_api'
-import { Link } from 'react-router-dom'
+import { getMoviesCountry, getMoviesGenre, searchMoviesByKeyWords } from '../../api/movie_api'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Header() {
 
   const [genre, setGenre] = useState([])
   const [country, setCountry] = useState([])
   const [scroll, setScrolled] = useState(false)
+  const [searchMovies, setSearchMovies] = useState([])
+  const [keywords, setKeywords] = useState('')
+  const navigate = useNavigate()
+  const base_url = import.meta.env.VITE_BASE_IMG_URL
+
+  useEffect(() => {
+    if (!keywords.trim()) {
+      setSearchMovies([])
+      return
+    }
+
+    searchMoviesByKeyWords(keywords)
+      .then(data => {
+        if (data)
+          setSearchMovies(data.items)
+      })
+  }, [keywords])
 
   useEffect(() => {
     getMoviesGenre()
@@ -31,7 +48,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if(window.scrollY > 50)
+      if (window.scrollY > 50)
         setScrolled(true)
       else
         setScrolled(false)
@@ -42,6 +59,14 @@ export default function Header() {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (keywords.trim()) {
+      navigate(`/tim-kiem?keyword=${keywords}`)
+      setSearchMovies([])
+    }
+  }
 
   return (
     <div className={`flex justify-between px-16 z-10 w-full fixed transition-all duration-300 ease-in-out
@@ -83,13 +108,54 @@ export default function Header() {
             ))}
           </ul>
         </li>
-        <li className='inline-flex text-white text-[14px] cursor-pointer'>Phim lẻ</li>
-        <li className='inline-flex text-white text-[14px] cursor-pointer'>Phim bộ</li>
+        <li className='inline-flex text-white text-[14px] cursor-pointer'>
+          <Link to={`/danh-sach/phim-le?page=1&limit=24`}>Phim Lẻ</Link>
+        </li>
+        <li className='inline-flex text-white text-[14px] cursor-pointer'>
+          <Link to={`/danh-sach/phim-bo?page=1&limit=24`}>Phim Bộ</Link>
+        </li>
       </ul>
-      <div className="flex gap-10">
-        <FaSearch className='text-white' />
-        <ul className='border-r-red-500 w-[45px]'><FaUser className='text-red-500' /></ul>
-      </div>
+      <form onSubmit={handleSubmit} className="w-[300px] relative">
+        <div className="flex gap-10 relative items-center">
+          {/* icon search */}
+          <div className="absolute left-3">
+            <FaSearch className="text-white w-4 h-4" />
+          </div>
+
+          {/* input search */}
+          <input
+            value={keywords}
+            onChange={(e) => setKeywords(e.target.value)}
+            placeholder="Tìm kiếm phim, diễn viên"
+            className="bg-[rgba(255,255,255,.08)] text-white pl-8 pr-2 py-2 border border-transparent rounded-xl text-sm w-full h-[44.8px] focus:outline-none focus:border-white"
+          />
+
+          {searchMovies.length > 0 && (
+            <ul className="absolute top-[110%] right-0
+         bg-[#161616] rounded-md shadow-lg max-h-140 px-4 z-50">
+              {searchMovies
+                .slice(0, 6)
+                .map(item => (
+                  <li
+                    key={item._id}
+                    className="flex items-center gap-3 px-2 py-4 hover:bg-[rgba(15, 17, 26, .95)] cursor-pointer"
+                  >
+                    <img
+                      src={`${base_url}/${item.thumb_url}`}
+                      alt={item.name}
+                      className="w-10 h-14 object-cover rounded"
+                    />
+                    <span className="text-white text-sm line-clamp-1">{item.name}</span>
+                  </li>
+                ))}
+            </ul>
+          )}
+          {/* user icon */}
+          <ul className="flex items-center justify-center w-[45px] h-[44.8px] border border-transparent rounded-xl bg-[rgba(255,255,255,.08)]">
+            <FaUser className="text-red-500" />
+          </ul>
+        </div>
+      </form>
     </div>
   )
 }
