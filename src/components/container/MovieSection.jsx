@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { getMoviesBySlugCategory, getMoviesBySlugCategory2 } from '../../api/movie_api'
+import { getMoviesBySlugCategory } from '../../api/movie_api'
+import { Link } from 'react-router-dom'
 
 export default function NewMovies({ slug }) {
     const [movie, setMovie] = useState([])
-    const [movie2, setMovie2] = useState([])
+    const [title, setTitle] = useState("")
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
     useEffect(() => {
         getMoviesBySlugCategory(slug)
-            .then(item => {
-                if (item)
-                    setMovie(item)
-            })
-    }, [slug])
-
-    useEffect(() => {
-        getMoviesBySlugCategory2(slug)
             .then(data => {
-                if (data)
-                    setMovie2(data)
+                if (data) {
+                    setMovie(data.items)
+                    setTitle(data.breadCrumb?.[0]?.name || '')
+                }
             })
     }, [slug])
 
@@ -26,9 +21,11 @@ export default function NewMovies({ slug }) {
         <>
             <div className="header-movies">
                 <h2 className="title-category">
-                    {movie2.titlePage}
+                    {title}
                 </h2>
-                <button className="text-white">Xem toàn bộ</button>
+                <button className="text-white">
+                    <Link to={`/danh-sach/${slug}?page=1&limit=24`}>Xem toàn bộ</Link>
+                </button>
             </div>
             <div className='movies-card'>
                 {movie

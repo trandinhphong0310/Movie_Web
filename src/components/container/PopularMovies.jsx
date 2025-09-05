@@ -18,14 +18,10 @@ export default function PopularMovies() {
         <div className='container mx-auto pt-[90px] pb-[60px]'>
             <div className='flex justify-between items-center'>
                 <h2 className='font-semibold text-white text-[28px] py-4 uppercase'>Phim đề cử</h2>
-                <span className='right-0 py-4 hover:scale-105 transform transition duration-300 ease-in-out'>
-                    <button className='text-[#cecfd1] text-[16px] mt-4 cursor-pointer'>Xem tất cả</button>
-                </span>
             </div>
             <div className='grid gap-6 lg:grid-cols-4 xl:grid-cols-6'>
                 {movie
                     .filter(item => (item.imdb.vote_average >= 5 || item.tmdb.vote_average >= 5))
-                    .slice(0, 6)
                     .map(item => (
                         <div key={item._id} className='mt-4 cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out'>
                             <img
