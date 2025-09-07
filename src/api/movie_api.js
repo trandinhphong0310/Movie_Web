@@ -82,3 +82,23 @@ export const searchMoviesByKeyWords = async (keywords) => {
         console.log(err)
     }
 }
+
+export const getMoviesDetail = async (slug) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/phim/${slug}`)
+        const data = await response.json()
+        return data.data
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const getActorForMovies = async (slug) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_KEY}/phim/${slug}/peoples`)
+        const data = await response.json()
+        return data.data
+    } catch (err) {
+        console.log(err)
+    }
+}
