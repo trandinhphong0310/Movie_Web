@@ -131,22 +131,23 @@ export default function Header() {
           />
 
           {searchMovies.length > 0 && (
-            <ul className="absolute top-[110%] right-0
-         bg-[#161616] rounded-md shadow-lg max-h-140 px-4 z-50">
+            <ul className="absolute top-[120%] right-10 w-full
+         bg-[#0F111A]/95 rounded-md shadow-lg max-h-140 px-4 z-50">
               {searchMovies
                 .slice(0, 6)
                 .map(item => (
-                  <li
-                    key={item._id}
-                    className="flex items-center gap-3 px-2 py-4 hover:bg-[rgba(15, 17, 26, .95)] cursor-pointer"
-                  >
-                    <img
-                      src={`${base_url}/${item.thumb_url}`}
-                      alt={item.name}
-                      className="w-10 h-14 object-cover rounded"
-                    />
-                    <span className="text-white text-sm line-clamp-1">{item.name}</span>
-                  </li>
+                  <Link to={`/phim/${item.slug}`} key={item._id}>
+                    <li
+                      className="flex items-center gap-3 px-2 py-4 hover:bg-[#0F111A]/95 cursor-pointer"
+                    >
+                      <img
+                        src={`${base_url}/${item.thumb_url}`}
+                        alt={item.name}
+                        className="w-10 h-14 object-cover rounded"
+                      />
+                      <span className="text-white text-sm line-clamp-1">{item.name}</span>
+                    </li>
+                  </Link>
                 ))}
             </ul>
           )}
