@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { getMoviesBySlugCategory } from '../../api/movie_api'
+import React, { use, useEffect, useState } from 'react'
+import { getMoviesBySlugCategory, getMoviesDetail } from '../../api/movie_api'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from 'react-slick'
@@ -7,6 +7,8 @@ import Slider from 'react-slick'
 export default function Banner() {
 
     const [movie, setMovie] = useState([])
+    const [trailer, setTrailer] = useState("")
+    const [showTrailer, setShowTrailer] = useState(false)
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
     useEffect(() => {
@@ -17,7 +19,23 @@ export default function Banner() {
             })
     }, [])
 
-    
+    const handleWatchTrailer = async (slug) => {
+        try {
+            const detail = await getMoviesDetail(slug)
+            if (detail?.item.trailer_url) {
+                setTrailer(detail.item.trailer_url)
+                setShowTrailer(true)
+            } else {
+                alert("Phim chưa có trailer")
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    const handleCloseTrailer = () => {
+        setShowTrailer(false)
+    }
 
     const settings = {
         dots: true,
@@ -62,7 +80,7 @@ export default function Banner() {
                                 </span>
                             </div>
                             <div>
-                                <button className='px-[12px] py-[24px] hover:bg-[#e50916] text-[16px] w-[140px] leading-none ml-4 cursor-pointer transform transition duration-300 ease-in-out bg-[#141414] text-white rounded'>
+                                <button onClick={() => handleWatchTrailer(item.slug)} className='px-[12px] py-[24px] hover:bg-[#e50916] text-[16px] w-[140px] leading-none ml-4 cursor-pointer transform transition duration-300 ease-in-out bg-[#141414] text-white rounded'>
                                     Xem trailer
                                 </button>
                             </div>
@@ -70,6 +88,29 @@ export default function Banner() {
                     </div>
                 ))}
             </Slider>
+
+            {showTrailer && trailer && (
+                <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+                    <div className="relative w-[800px] h-[450px]">
+                        <button
+                            onClick={handleCloseTrailer}
+                            className="absolute top-4 right-4 z-50 cursor-pointer"
+                        >
+                            <i className="fa-solid fa-xmark text-white text-[30px]"></i>
+                        </button>
+
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={trailer.replace("watch?v=", "embed/")}
+                            title="Trailer"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

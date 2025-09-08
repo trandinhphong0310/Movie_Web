@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getActorForMovies, getMoviesDetail } from '../../api/movie_api'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { FaPlay } from 'react-icons/fa'
 
 export default function MoviesCard() {
@@ -39,7 +39,7 @@ export default function MoviesCard() {
 
     return (
         <div className='container mx-auto pt-[100px] flex w-full'>
-            <div className='bg-[rgba(25,27,36,0.3)] w-[440px] rounded-2xl'>
+            <div className='bg-[rgba(25,27,36,0.3)] flex-1 rounded-2xl'>
                 <img
                     src={`${base_url}/${movies.thumb_url}`}
                     alt={movies.name}
@@ -84,13 +84,14 @@ export default function MoviesCard() {
                     <strong className='text-white'>Quốc gia: </strong>
                     <span className='text-[14px] text-gray-300'>{country.name}</span>
                 </div>
-                <div>
-                    <span className='text-white text-[18px] mb-8'><strong>Diễn viên</strong></span>
-                    <ul className='flex gap-4 flex-wrap'>
-                        {actor.map((item, index) => (
+                <span className='text-white text-[18px] mb-8'><strong>Diễn viên</strong></span>
+                <ul className='flex gap-4 flex-wrap'>
+                    {actor
+                        .slice(0, 6)
+                        .map((item, index) => (
                             <li key={index}>
                                 {item.profile_path !== "" && (
-                                    <a className='relative flex flex-col items-center w-[70px] h-[100px] mb-6'>
+                                    <a className='relative flex flex-col items-center w-[70px] h-[100px] mb-18'>
                                         <img
                                             src={`${actor_img_url}/${item?.profile_path}`}
                                             alt={item.name}
@@ -101,10 +102,9 @@ export default function MoviesCard() {
                                 )}
                             </li>
                         ))}
-                    </ul>
-                </div>
+                </ul>
             </div>
-            <div className='bg-[rgba(25,27,36,0.3)] grow-1 rounded-2xl'>
+            <div className='bg-[rgba(25,27,36,0.3)] flex-2 rounded-2xl'>
                 <div className='flex justify-between items-center mb-4 mt-8'>
                     <button className='w-[140px] text-[18px] rounded-2xl p-4 text-[#191b24] flex gap-2 items-center justify-center bg-gradient-to-tr from-[#FECF59] to-[#FFF1CC]'>
                         <FaPlay /> Xem ngay
@@ -115,14 +115,17 @@ export default function MoviesCard() {
                     <span className='text-[16px] text-white'><strong>Tập phim</strong></span>
                 </div>
                 <ul className='flex flex-wrap gap-4 mb-8'>
-                    {episode.map((item, index) => (
-                        <li className='bg-[#282b3a] py-4 px-8 overflow-x-hidden' key={index}>
-                            <a className='flex gap-2 text-[14px] text-white items-center'>
-                                <strong className='text-[12px]'><FaPlay /></strong>
-                                <span>Tập {item.name}</span>
-                            </a>
-                        </li>
-                    ))}
+                    {episode
+                        .map((item, index) => (
+                            <li className='bg-[#282b3a] py-4 px-8 overflow-x-hidden' key={index}>
+                                <Link to={`/xem-phim/${slug}?ep=${item.name}`}>
+                                    <a className='flex gap-2 text-[14px] text-white items-center'>
+                                        <strong className='text-[12px]'><FaPlay /></strong>
+                                        <span>Tập {item.name}</span>
+                                    </a>
+                                </Link>
+                            </li>
+                        ))}
                 </ul>
             </div>
         </div>

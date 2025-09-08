@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getMoviesByGenre } from '../../api/movie_api'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 
 export default function GenreMovie() {
 
@@ -16,7 +16,7 @@ export default function GenreMovie() {
 
 
     useEffect(() => {
-        window.scrollTo({top: 0, behavior: 'smooth'})
+        window.scrollTo({ top: 0, behavior: 'smooth' })
     }, [page])
 
     useEffect(() => {
@@ -31,11 +31,11 @@ export default function GenreMovie() {
     }, [slug, page, limit])
 
     const handleNext = () => {
-        setSearchParams({page: page + 1, limit})
+        setSearchParams({ page: page + 1, limit })
     }
 
     const handlePrev = () => {
-        setSearchParams({page: page - 1, limit})
+        setSearchParams({ page: page - 1, limit })
     }
 
     return (
@@ -47,20 +47,22 @@ export default function GenreMovie() {
                 {movies
                     .map(item => (
                         <div key={item._id} className='mt-4 cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out'>
-                            <img
-                                className='w-full aspect-[2/3] object-cover rounded-lg'
-                                src={`${base_url}/${item.thumb_url}`}>
-                            </img>
-                            <div className='bg-[#221f1f] p-[16px] rounded-md flex flex-col h-60 relative'>
-                                <h3 className='text-white text-[20px] line-clamp-2'>{item.name}</h3>
-                                <h4 className='text-[14px] text-[#aaaaaa] mt-4 mb-2'>{item.origin_name}</h4>
-                                <p className='movies-card_time'>{item.time}</p>
-                                <p className='movies-card_year'>{item.year}</p>
-                                <div className="movies-card-lang_episode">
-                                    <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : "Ko P.Đề"}</span>
-                                    <span className='movies-card_episode'>{item.episode_current}</span>
+                            <Link to={`/phim/${item.slug}`}>
+                                <img
+                                    className='w-full aspect-[2/3] object-cover rounded-lg'
+                                    src={`${base_url}/${item.thumb_url}`}>
+                                </img>
+                                <div className='bg-[#221f1f] p-[16px] rounded-md flex flex-col h-60 relative'>
+                                    <h3 className='text-white text-[20px] line-clamp-2'>{item.name}</h3>
+                                    <h4 className='text-[14px] text-[#aaaaaa] mt-4 mb-2'>{item.origin_name}</h4>
+                                    <p className='movies-card_time'>{item.time}</p>
+                                    <p className='movies-card_year'>{item.year}</p>
+                                    <div className="movies-card-lang_episode">
+                                        <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : "Ko P.Đề"}</span>
+                                        <span className='movies-card_episode'>{item.episode_current}</span>
+                                    </div>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     ))}
             </div>
