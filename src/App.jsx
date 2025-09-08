@@ -4,6 +4,7 @@ import Header from "./components/layouts/Header"
 import Home from "./components/pages/Home"
 import Footer from "./components/layouts/Footer";
 import MoviesCard from "./components/container/MoviesCard";
+import MoviesPlay from "./components/container/MoviesPlay";
 import MovieListByCategory from "./components/pages/MovieListByCategory";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"
@@ -23,6 +24,7 @@ function App() {
             <Route path="/danh-sach/:slug" element={<MovieListByCategory />} />
             <Route path="/tim-kiem" element={<SearchResults />} />
             <Route path="/phim/:slug" element={<MoviesCard />} />
+            <Route path="/xem-phim/:slug" element={<MoviesPlay />} />
           </Routes>
         </main>
         <Footer />
