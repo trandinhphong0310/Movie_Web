@@ -126,7 +126,7 @@ export default function Header() {
           <input
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            placeholder="Tìm kiếm phim, diễn viên"
+            placeholder="Tìm kiếm phim"
             className="bg-[rgba(255,255,255,.08)] text-white pl-8 pr-2 py-2 border border-transparent rounded-xl text-sm w-full h-[44.8px] focus:outline-none focus:border-white"
           />
 

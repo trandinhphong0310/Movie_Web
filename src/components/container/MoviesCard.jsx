@@ -106,12 +106,14 @@ export default function MoviesCard() {
             </div>
             <div className='bg-[rgba(25,27,36,0.3)] flex-2 rounded-2xl'>
                 <div className='flex justify-between items-center mb-4 mt-8'>
-                    <button className='w-[140px] text-[18px] rounded-2xl p-4 text-[#191b24] flex gap-2 items-center justify-center bg-gradient-to-tr from-[#FECF59] to-[#FFF1CC]'>
-                        <FaPlay /> Xem ngay
-                    </button>
+                    <Link to={`/xem-phim/${slug}?ep=1`}>
+                        <button className='cursor-pointer w-[140px] text-[18px] rounded-2xl p-4 text-[#191b24] flex gap-2 items-center justify-center bg-gradient-to-tr from-[#FECF59] to-[#FFF1CC] hover:from-[#FFF1CC] hover:to-[#FECF59]'>
+                            <FaPlay /> Xem ngay
+                        </button>
+                    </Link>
                     <span className='w-[120px] text-[14px] text-white bg-[#3556b6] rounded-xl p-2 flex justify-center gap-2'>{imdb.vote_average} Đánh giá</span>
                 </div>
-                <div className='border-b border-gray-600 w-fit mt-8 mb-4'>
+                <div className='border-b border-gray-600 w-fit mt-8 mb-4 '>
                     <span className='text-[16px] text-white'><strong>Tập phim</strong></span>
                 </div>
                 <ul className='flex flex-wrap gap-4 mb-8'>
@@ -119,7 +121,7 @@ export default function MoviesCard() {
                         .map((item, index) => (
                             <li className='bg-[#282b3a] py-4 px-8 overflow-x-hidden' key={index}>
                                 <Link to={`/xem-phim/${slug}?ep=${item.name}`}>
-                                    <a className='flex gap-2 text-[14px] text-white items-center'>
+                                    <a className='flex gap-2 text-[14px] text-white items-center hover:text-yellow-300'>
                                         <strong className='text-[12px]'><FaPlay /></strong>
                                         <span>Tập {item.name}</span>
                                     </a>
