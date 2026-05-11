@@ -1,31 +1,57 @@
-import GenreMovie from "./components/container/GenreMovie"
-import CountryMovie from "./components/container/CountryMovie"
-import Header from "./components/layouts/Header"
-import Home from "./components/pages/Home"
-import Footer from "./components/layouts/Footer";
-import MoviesCard from "./components/container/MoviesCard";
-import MoviesPlay from "./components/container/MoviesPlay";
-import MovieListByCategory from "./components/pages/MovieListByCategory";
-
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import SearchResults from "./components/container/SearchResults";
+
+import Header from "./components/layouts/Header"
+import Footer from "./components/layouts/Footer"
+
+// Lazy load từng trang — chỉ tải khi user navigate tới
+const Home               = lazy(() => import("./components/pages/Home"))
+const GenreMovie         = lazy(() => import("./components/container/GenreMovie"))
+const CountryMovie       = lazy(() => import("./components/container/CountryMovie"))
+const MovieListByCategory = lazy(() => import("./components/pages/MovieListByCategory"))
+const SearchResults      = lazy(() => import("./components/container/SearchResults"))
+const MoviesCard         = lazy(() => import("./components/container/MoviesCard"))
+const MoviesPlay         = lazy(() => import("./components/container/MoviesPlay"))
+
+// Loading spinner hiện khi đang tải trang
+function PageLoader() {
+  return (
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "60vh",
+    }}>
+      <div style={{
+        width: 48,
+        height: 48,
+        border: "4px solid #ffffff22",
+        borderTop: "4px solid #e50914",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
 
 function App() {
-
   return (
     <div className="flex flex-col min-h-screen">
       <BrowserRouter>
         <Header />
         <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/the-loai/:slug" element={<GenreMovie />} />
-            <Route path="/quoc-gia/:slug" element={<CountryMovie />} />
-            <Route path="/danh-sach/:slug" element={<MovieListByCategory />} />
-            <Route path="/tim-kiem" element={<SearchResults />} />
-            <Route path="/phim/:slug" element={<MoviesCard />} />
-            <Route path="/xem-phim/:slug" element={<MoviesPlay />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/the-loai/:slug" element={<GenreMovie />} />
+              <Route path="/quoc-gia/:slug" element={<CountryMovie />} />
+              <Route path="/danh-sach/:slug" element={<MovieListByCategory />} />
+              <Route path="/tim-kiem" element={<SearchResults />} />
+              <Route path="/phim/:slug" element={<MoviesCard />} />
+              <Route path="/xem-phim/:slug" element={<MoviesPlay />} />
+            </Routes>
+          </Suspense>
         </main>
         <Footer />
       </BrowserRouter>
