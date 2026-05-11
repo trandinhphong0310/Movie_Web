@@ -1,4 +1,4 @@
-# 🎬 CineHub
+# CineHub
 
 > Trang xem phim online miễn phí — Vietsub, thuyết minh, full HD
 
@@ -12,12 +12,12 @@
 
 ## Tính năng
 
-- 🏠 Trang chủ với banner phim sắp chiếu (xem trailer)
-- 🎞️ Chi tiết phim — mô tả, diễn viên, danh sách tập
-- ▶️ Xem phim trực tiếp — không cần đăng nhập
-- 🔍 Tìm kiếm realtime
-- 🗂️ Duyệt theo thể loại & quốc gia
-- 📱 Responsive — máy tính, tablet, điện thoại
+- Trang chủ với banner phim sắp chiếu (xem trailer)
+- Chi tiết phim — mô tả, diễn viên, danh sách tập
+- Xem phim trực tiếp — không cần đăng nhập
+- Tìm kiếm realtime
+- Duyệt theo thể loại & quốc gia
+- Responsive — máy tính, tablet, điện thoại
 
 ## Tech Stack
 
@@ -25,22 +25,6 @@
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white&style=flat-square)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)
 ![React Router](https://img.shields.io/badge/React_Router-v7-CA4245?logo=reactrouter&logoColor=white&style=flat-square)
-
-## Cài đặt
-
-```bash
-git clone https://github.com/trandinhphong0310/Movie_Web.git
-cd Movie_Web
-npm install
-npm run dev
-```
-
-Tạo file `.env`:
-```env
-VITE_API_KEY=https://ophim1.com/v1/api
-VITE_BASE_IMG_URL=https://img.ophim.live/uploads/movies
-VITE_ACTOR_IMG_URL=https://image.tmdb.org/t/p/w185
-```
 
 ---
 
