@@ -23,5 +23,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-# Project docs
-README.md
