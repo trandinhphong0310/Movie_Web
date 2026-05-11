@@ -1,134 +1,163 @@
-import { useEffect, useState } from 'react'
-import { getActorForMovies, getMoviesDetail } from '../../api/movie_api'
-import { Link, useParams } from 'react-router-dom'
-import { FaPlay } from 'react-icons/fa'
+import { useParams, Link } from 'react-router-dom'
+import { FaPlay, FaStar, FaClock, FaFilm, FaGlobe, FaUser } from 'react-icons/fa'
+import { useMovieDetail } from '../../hooks/useMovieDetail'
+import ActorList from '../shared/ActorList'
+import EpisodeList from '../shared/EpisodeList'
+
+const base_url = import.meta.env.VITE_BASE_IMG_URL
+
+// Small helper for info rows
+function InfoRow({ icon, label, value }) {
+    if (!value) return null
+    return (
+        <div className='flex items-start gap-3 py-3 border-b border-white/5'>
+            <span className='text-red-400 mt-0.5 flex-shrink-0'>{icon}</span>
+            <div className='flex-1 min-w-0'>
+                <p className='text-gray-500 text-[11px] uppercase tracking-wider mb-0.5'>{label}</p>
+                <p className='text-gray-200 text-[13px]'>{value}</p>
+            </div>
+        </div>
+    )
+}
 
 export default function MoviesCard() {
-
     const { slug } = useParams()
-    const [movies, setMovies] = useState([])
-    const [category, setCategory] = useState([])
-    const [actor, setActor] = useState([])
-    const [country, setCountry] = useState([])
-    const [episode, setEpisode] = useState([])
-    const [imdb, setImdb] = useState({})
-    const base_url = import.meta.env.VITE_BASE_IMG_URL
-    const actor_img_url = import.meta.env.VITE_ACTOR_IMG_URL
+    const { movies, category, country, episodes, imdb, actor, loading } = useMovieDetail(slug)
 
-    useEffect(() => {
-        getMoviesDetail(slug)
-            .then(data => {
-                if (data) {
-                    setMovies(data.item)
-                    setCategory(data.item.category)
-                    setCountry(data.item.country[0])
-                    setImdb(data.item.imdb)
-                    setEpisode(data.item.episodes[0].server_data)
-                }
-            })
-    }, [slug])
-
-    useEffect(() => {
-        getActorForMovies(slug)
-            .then(data => {
-                if (data) {
-                    setActor(data.peoples)
-                }
-            })
-    }, [slug])
+    if (loading || !movies) {
+        return (
+            <div className='flex items-center justify-center min-h-[60vh]'>
+                <div className='text-center'>
+                    <div className='w-10 h-10 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-3' />
+                    <p className='text-gray-400 text-sm'>Đang tải...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
-        <div className='container mx-auto pt-[100px] flex w-full'>
-            <div className='bg-[rgba(25,27,36,0.3)] flex-1 rounded-2xl'>
-                <img
-                    src={`${base_url}/${movies.thumb_url}`}
-                    alt={movies.name}
-                    className='w-[160px]'
-                />
-                <h1 className='text-white text-[25px] mb-4'>{movies.name}</h1>
-                <h2 className='text-[#ffd875] text-[14px] mb-8'>{movies.origin_name}</h2>
-                <ul className='flex gap-2 text-[14px] text-gray-300 mb-4'>
-                    <li className='border border-white px-2 py-1 rounded bg-[#ffffff10]'>
-                        <p>{movies.year}</p>
-                    </li>
-                    <li className='border border-white px-2 py-1 rounded bg-[#ffffff10]'>
-                        <p>{movies.episode_total}</p>
-                    </li>
-                </ul>
-                <ul className='flex flex-wrap gap-2 text-[14px] text-gray-300 mb-8'>
-                    {category.map(item => (
-                        <li
-                            key={item.id}
-                            className='border border-transparent px-2 py-2 rounded bg-[#ffffff10] mb-2'
-                        >
-                            <a>{item.name}</a>
-                        </li>
-                    ))}
-                </ul>
-                <div>
-                    <span className='text-white text-[16px]'><strong>Giới thiệu:</strong></span>
-                    <div
-                        className="mt-2 text-gray-400 mb-8"
-                        dangerouslySetInnerHTML={{ __html: movies.content }}
-                    />
-                </div>
-                <div className='mb-4'>
-                    <strong className='text-white'>Thời lượng: </strong>
-                    <span className='text-[14px] text-gray-300'>{movies.time}</span>
-                </div>
-                <div className='mb-4'>
-                    <strong className='text-white'>Đạo diễn: </strong>
-                    <span className='text-[14px] text-gray-300'>{movies.director}</span>
-                </div>
-                <div className='mb-4'>
-                    <strong className='text-white'>Quốc gia: </strong>
-                    <span className='text-[14px] text-gray-300'>{country.name}</span>
-                </div>
-                <span className='text-white text-[18px] mb-8'><strong>Diễn viên</strong></span>
-                <ul className='flex gap-4 flex-wrap'>
-                    {actor
-                        .slice(0, 6)
-                        .map((item, index) => (
-                            <li key={index}>
-                                {item.profile_path !== "" && (
-                                    <a className='relative flex flex-col items-center w-[70px] h-[100px] mb-18'>
-                                        <img
-                                            src={`${actor_img_url}/${item?.profile_path}`}
-                                            alt={item.name}
-                                            className='w-full h-full object-cover rounded-lg mb-2'
-                                        />
-                                        <span className='text-white'>{item.name}</span>
-                                    </a>
+        <div className='container mx-auto px-4 pt-[80px] md:pt-[100px] pb-16'>
+            <div className='flex flex-col lg:flex-row gap-6'>
+
+                {/* ── Left panel ── */}
+                <div className='lg:w-[320px] xl:w-[360px] flex-shrink-0'>
+                    <div className='bg-[rgba(25,27,36,0.6)] rounded-2xl overflow-hidden border border-white/5'>
+
+                        {/* Poster hero */}
+                        <div className='relative'>
+                            <img
+                                src={`${base_url}/${movies.thumb_url}`}
+                                alt={movies.name}
+                                className='w-full aspect-video object-cover'
+                            />
+                            {/* gradient overlay bottom */}
+                            <div className='absolute inset-0 bg-gradient-to-t from-[#191b24] via-transparent to-transparent' />
+
+                            {/* Badges over poster */}
+                            <div className='absolute bottom-3 left-3 flex gap-2 flex-wrap'>
+                                {movies.quality && (
+                                    <span className='text-[11px] px-2 py-0.5 bg-red-500/90 text-white rounded font-semibold'>
+                                        {movies.quality}
+                                    </span>
                                 )}
-                            </li>
-                        ))}
-                </ul>
-            </div>
-            <div className='bg-[rgba(25,27,36,0.3)] flex-2 rounded-2xl'>
-                <div className='flex justify-between items-center mb-4 mt-8'>
-                    <Link to={`/xem-phim/${slug}?ep=1`}>
-                        <button className='cursor-pointer w-[140px] text-[18px] rounded-2xl p-4 text-[#191b24] flex gap-2 items-center justify-center bg-gradient-to-tr from-[#FECF59] to-[#FFF1CC] hover:from-[#FFF1CC] hover:to-[#FECF59]'>
-                            <FaPlay /> Xem ngay
-                        </button>
-                    </Link>
-                    <span className='w-[120px] text-[14px] text-white bg-[#3556b6] rounded-xl p-2 flex justify-center gap-2'>{imdb.vote_average} Đánh giá</span>
+                                {movies.lang && (
+                                    <span className='text-[11px] px-2 py-0.5 bg-emerald-600/90 text-white rounded font-semibold'>
+                                        {movies.lang}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Title block */}
+                        <div className='px-5 pt-4 pb-3 border-b border-white/5'>
+                            <h1 className='text-white text-[18px] sm:text-[20px] font-bold leading-snug mb-1'>
+                                {movies.name}
+                            </h1>
+                            <h2 className='text-[#ffd875] text-[13px] italic'>{movies.origin_name}</h2>
+
+                            {/* Meta chips */}
+                            <div className='flex flex-wrap gap-2 mt-3'>
+                                {movies.year && (
+                                    <span className='text-[12px] px-2.5 py-1 rounded-lg bg-white/10 text-gray-300'>
+                                        {movies.year}
+                                    </span>
+                                )}
+                                {movies.episode_total && (
+                                    <span className='text-[12px] px-2.5 py-1 rounded-lg bg-white/10 text-gray-300'>
+                                        {movies.episode_total}
+                                    </span>
+                                )}
+                                {category.slice(0, 2).map(item => (
+                                    <span key={item.id} className='text-[12px] px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 border border-red-500/20'>
+                                        {item.name}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Info rows */}
+                        <div className='px-5 py-1'>
+                            <InfoRow icon={<FaClock size={12} />} label='Thời lượng' value={movies.time} />
+                            <InfoRow icon={<FaUser size={12} />} label='Đạo diễn' value={movies.director} />
+                            <InfoRow icon={<FaGlobe size={12} />} label='Quốc gia' value={country?.name} />
+                            <InfoRow icon={<FaFilm size={12} />} label='Thể loại'
+                                value={category.map(c => c.name).join(', ')} />
+                        </div>
+
+                        {/* Description */}
+                        {movies.content && (
+                            <div className='px-5 pb-4 pt-2 border-t border-white/5 mt-1'>
+                                <p className='text-[11px] text-gray-500 uppercase tracking-wider mb-2'>Giới thiệu</p>
+                                <div
+                                    className='text-gray-400 text-[13px] leading-relaxed line-clamp-4'
+                                    dangerouslySetInnerHTML={{ __html: movies.content }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Actors */}
+                        {actor.length > 0 && (
+                            <div className='px-5 pb-5 border-t border-white/5 pt-4'>
+                                <ActorList actors={actor} limit={6} />
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className='border-b border-gray-600 w-fit mt-8 mb-4 '>
-                    <span className='text-[16px] text-white'><strong>Tập phim</strong></span>
+
+                {/* ── Right panel ── */}
+                <div className='flex-1 min-w-0'>
+                    <div className='bg-[rgba(25,27,36,0.4)] rounded-2xl p-5 md:p-6 border border-white/5'>
+
+                        {/* Action row */}
+                        <div className='flex flex-wrap items-center justify-between gap-3 mb-8'>
+                            <Link to={`/xem-phim/${slug}?ep=1`}>
+                                <button className='cursor-pointer flex gap-2 items-center justify-center
+                                    px-6 py-3 rounded-xl text-[15px] font-semibold text-[#1a1600]
+                                    bg-gradient-to-r from-[#FECF59] to-[#f59e0b]
+                                    hover:from-[#f59e0b] hover:to-[#FECF59]
+                                    shadow-[0_0_20px_rgba(254,207,89,0.3)] hover:shadow-[0_0_28px_rgba(254,207,89,0.5)]
+                                    transition-all duration-300'>
+                                    <FaPlay className='text-[13px]' /> Xem ngay
+                                </button>
+                            </Link>
+
+                            {imdb?.vote_average > 0 && (
+                                <div className='flex items-center gap-3 px-4 py-2.5 rounded-xl
+                                    bg-gradient-to-r from-[#1e2130] to-[#252840]
+                                    border border-white/5'>
+                                    <FaStar className='text-yellow-400 text-[18px]' />
+                                    <div>
+                                        <p className='text-white font-bold text-[16px] leading-none'>{imdb.vote_average}</p>
+                                        <p className='text-gray-500 text-[11px] mt-0.5'>IMDB</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <EpisodeList episodes={episodes} slug={slug} />
+                    </div>
                 </div>
-                <ul className='flex flex-wrap gap-4 mb-8'>
-                    {episode
-                        .map((item, index) => (
-                            <li className='bg-[#282b3a] py-4 px-8 overflow-x-hidden' key={index}>
-                                <Link to={`/xem-phim/${slug}?ep=${item.name}`}>
-                                    <a className='flex gap-2 text-[14px] text-white items-center hover:text-yellow-300'>
-                                        <strong className='text-[12px]'><FaPlay /></strong>
-                                        <span>Tập {item.name}</span>
-                                    </a>
-                                </Link>
-                            </li>
-                        ))}
-                </ul>
+
             </div>
         </div>
     )

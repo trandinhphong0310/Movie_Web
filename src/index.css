@@ -17,11 +17,11 @@ body {
   }
 
   .movies-card {
-    @apply gap-6 flex;
+    @apply gap-2 sm:gap-4 flex w-full;
   }
 
   .movies-card_item {
-    @apply w-full cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out;
+    @apply md:flex-1 md:min-w-0 min-w-[140px] cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out;
   }
 
   .movies-card_name {
@@ -39,7 +39,7 @@ body {
 
   .movies-card_lang,
   .movies-card_episode {
-    @apply text-white text-[11px] mt-4 px-3 py-2;
+    @apply text-white text-[11px] mt-4 px-3 py-1;
   }
 
   .movies-card_lang {
@@ -48,5 +48,15 @@ body {
 
   .movies-card_episode {
     @apply bg-[#2ca35d] rounded-t-md;
+  }
+
+  /* Hide scrollbar cross-browser */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

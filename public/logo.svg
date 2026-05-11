@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <!-- Background pill -->
+  <rect width="200" height="60" rx="10" fill="#0f111a"/>
+
+  <!-- Film strip icon (left side) -->
+  <!-- Outer rect -->
+  <rect x="8" y="12" width="36" height="36" rx="4" fill="#ef4444"/>
+  <!-- Sprocket holes top -->
+  <rect x="12" y="14" width="5" height="5" rx="1" fill="#0f111a"/>
+  <rect x="21" y="14" width="5" height="5" rx="1" fill="#0f111a"/>
+  <rect x="30" y="14" width="5" height="5" rx="1" fill="#0f111a"/>
+  <!-- Sprocket holes bottom -->
+  <rect x="12" y="41" width="5" height="5" rx="1" fill="#0f111a"/>
+  <rect x="21" y="41" width="5" height="5" rx="1" fill="#0f111a"/>
+  <rect x="30" y="41" width="5" height="5" rx="1" fill="#0f111a"/>
+  <!-- Center play triangle -->
+  <polygon points="19,23 19,37 33,30" fill="white"/>
+
+  <!-- "Cine" text -->
+  <text x="54" y="38" font-family="'Roboto', 'Arial', sans-serif" font-size="26" font-weight="700" fill="white" letter-spacing="-0.5">Cine</text>
+  <!-- "Hub" text in red -->
+  <text x="110" y="38" font-family="'Roboto', 'Arial', sans-serif" font-size="26" font-weight="700" fill="#ef4444" letter-spacing="-0.5">Hub</text>
+</svg>

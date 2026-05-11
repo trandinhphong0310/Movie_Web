@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react'
-import { getMoviesBySlugCategory } from '../../api/movie_api'
+import { useEffect, useState } from 'react'
+import { getMoviesBySlugCategory } from '../../api/phim_api'
 import { Link } from 'react-router-dom'
+import MovieItemCard from '../shared/MovieItemCard'
 
-export default function NewMovies({ slug }) {
-    const [movie, setMovie] = useState([])
-    const [title, setTitle] = useState("")
-    const base_url = import.meta.env.VITE_BASE_IMG_URL
+export default function MovieSection({ slug }) {
+    const [movies, setMovies] = useState([])
+    const [title, setTitle] = useState('')
 
     useEffect(() => {
         getMoviesBySlugCategory(slug)
             .then(data => {
                 if (data) {
-                    setMovie(data.items)
+                    setMovies(data.items)
                     setTitle(data.breadCrumb?.[0]?.name || '')
                 }
             })
@@ -19,32 +19,16 @@ export default function NewMovies({ slug }) {
 
     return (
         <>
-            <div className="header-movies">
-                <h2 className="title-category">
-                    {title}
-                </h2>
-                <button className="text-white">
+            <div className='header-movies'>
+                <h2 className='title-category'>{title}</h2>
+                <button className='text-white'>
                     <Link to={`/danh-sach/${slug}?page=1&limit=24`}>Xem toàn bộ</Link>
                 </button>
             </div>
-            <div className='movies-card'>
-                {movie
-                    .slice(0, 5)
-                    .map(item => (
-                        <div key={item._id} className='movies-card_item'>
-                            <Link to={`/phim/${item.slug}`}>
-                                <div className='relative'>
-                                    <img src={`${base_url}/${item.poster_url}`} alt={item.name} />
-                                    <div className="absolute bottom-1 left-4">
-                                        <span className='movies-card_lang'>{item.lang === "Vietsub" ? "P.Đề" : "Ko P.Đề"}</span>
-                                        <span className='movies-card_episode'>{item.episode_current}</span>
-                                    </div>
-                                </div>
-                                <h3 className='movies-card_name'>{item.name}</h3>
-                                <h4 className='text-[12px] text-[#aaaaaa]'>{item.origin_name}</h4>
-                            </Link>
-                        </div>
-                    ))}
+            <div className='movies-card overflow-x-auto pb-2 scrollbar-hide'>
+                {movies.slice(0, 5).map(item => (
+                    <MovieItemCard key={item._id} item={item} layout='section' />
+                ))}
             </div>
         </>
     )

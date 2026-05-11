@@ -1,22 +1,18 @@
-import React, { use, useEffect, useState } from 'react'
-import { getMoviesBySlugCategory, getMoviesDetail } from '../../api/movie_api'
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import { useEffect, useState } from 'react'
+import { getMoviesBySlugCategory, getMoviesDetail } from '../../api/phim_api'
+import "slick-carousel/slick/slick.css"
+import "slick-carousel/slick/slick-theme.css"
 import Slider from 'react-slick'
 
 export default function Banner() {
-
     const [movie, setMovie] = useState([])
-    const [trailer, setTrailer] = useState("")
+    const [trailer, setTrailer] = useState('')
     const [showTrailer, setShowTrailer] = useState(false)
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
     useEffect(() => {
         getMoviesBySlugCategory('phim-sap-chieu')
-            .then(data => {
-                if (data)
-                    setMovie(data.items)
-            })
+            .then(data => { if (data) setMovie(data.items) })
     }, [])
 
     const handleWatchTrailer = async (slug) => {
@@ -26,88 +22,97 @@ export default function Banner() {
                 setTrailer(detail.item.trailer_url)
                 setShowTrailer(true)
             } else {
-                alert("Phim chưa có trailer")
+                alert('Phim chưa có trailer')
             }
-        } catch (err) {
-            console.log(err)
-        }
-    }
-
-    const handleCloseTrailer = () => {
-        setShowTrailer(false)
+        } catch (err) { console.error(err) }
     }
 
     const settings = {
-        dots: true,
         infinite: true,
         speed: 500,
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
-        autoplaySpeed: 3000,
-        arrows: false
-    }
-
-    if (!movie) {
-        return (
-            <div className='w-full h-[870px] flex items-center justify-center bg-gray-800'>
-                <span className='text-white text-xl'>Đang tải...</span>
-            </div>
-        )
+        autoplaySpeed: 4000,
+        arrows: false,
     }
 
     return (
-        <div className='relative w-full h-[870px] top-0'>
+        <div className='relative w-full mt-[70px] md:mt-0 h-[300px] sm:h-[420px] md:h-[700px] lg:h-[870px]'>
             <Slider {...settings}>
                 {movie.map(item => (
-                    <div key={item._id} className='relative w-full h-[870px]'>
+                    <div key={item._id} className='relative w-full h-[300px] sm:h-[420px] md:h-[700px] lg:h-[870px]'>
+                        {/* Background */}
                         <div
                             className='absolute inset-0 bg-center bg-no-repeat bg-cover'
                             style={{
-                                backgroundImage: `linear-gradient(to right, rgba(34,31,31,0.6) 0%, rgba(34,31,31,0.4) 100%), url(${base_url}/${item.poster_url})`
+                                backgroundImage: `linear-gradient(to right, rgba(20,18,18,0.85) 0%, rgba(20,18,18,0.4) 60%, rgba(20,18,18,0.1) 100%), url(${base_url}/${item.poster_url})`
                             }}
                         />
-                        <div className='absolute text-white w-[50%] top-[200px] left-[100px]'>
-                            <h1 className='text-[62px] uppercase font-bold'>{item.name}</h1>
-                            <h2 className='text-[24px] text-[#aaaaaa] ml-[14px] mb-[24px]'>{item.origin_name}</h2>
-                            <div className='flex gap-5 mb-[30px]'>
-                                <p className='mt-[10px] ml-[20px] px-4 py-2 bg-red-500'>{item.quality}</p>
-                                <p className='mt-[10px] px-4 py-2 bg-[#2ca32d]'>{item.lang === "Vietsub" ? "P.Đề" : ""}</p>
-                                <p className='mt-[10px] ml-[20px] py-2'>{item.time}</p>
-                                <p className='mt-[10px] ml-[20px] py-2'>{item.year}</p>
-                                <span className=''>
-                                    <p className='mb-[30px] text-[18px] text-[#cecfd1]'>{item.content}</p>
-                                </span>
+
+                        {/* Text content */}
+                        <div className='absolute text-white w-[90%] sm:w-[70%] md:w-[55%] lg:w-[48%]
+                            top-[90px] sm:top-[120px] md:top-[160px] lg:top-[200px]
+                            left-4 sm:left-8 md:left-12 lg:left-[100px]'>
+
+                            <h1 className='text-[26px] sm:text-[38px] md:text-[50px] lg:text-[62px] uppercase font-bold leading-tight line-clamp-2'>
+                                {item.name}
+                            </h1>
+                            <h2 className='text-[14px] sm:text-[16px] md:text-[20px] text-[#aaaaaa] mb-3 mt-1 line-clamp-1'>
+                                {item.origin_name}
+                            </h2>
+
+                            <div className='flex flex-wrap items-center gap-4 mb-4'>
+                                {item.quality && (
+                                    <span className='px-4 py-2 text-[13px] sm:text-[15px] bg-red-500 rounded'>{item.quality}</span>
+                                )}
+                                {item.lang === 'Vietsub' && (
+                                    <span className='px-4 py-2 text-[13px] sm:text-[15px] bg-[#2ca32d] rounded'>P.Đề</span>
+                                )}
+                                {item.time && (
+                                    <span className='text-[13px] sm:text-[15px] text-gray-300'>{item.time}</span>
+                                )}
+                                {item.year && (
+                                    <span className='text-[13px] sm:text-[15px] text-gray-300'>{item.year}</span>
+                                )}
                             </div>
-                            <div>
-                                <button onClick={() => handleWatchTrailer(item.slug)} className='px-[12px] py-[24px] hover:bg-[#e50916] text-[16px] w-[140px] leading-none ml-4 cursor-pointer transform transition duration-300 ease-in-out bg-[#141414] text-white rounded'>
-                                    Xem trailer
-                                </button>
-                            </div>
+
+                            <p className='hidden sm:block text-[13px] md:text-[15px] text-[#cecfd1] mb-5 line-clamp-2 md:line-clamp-3'>
+                                {item.content}
+                            </p>
+
+                            <button
+                                onClick={() => handleWatchTrailer(item.slug)}
+                                className='px-5 py-3 text-[13px] sm:text-[15px] cursor-pointer
+                                    bg-[#333] hover:bg-[#e50916] text-white rounded
+                                    transform transition duration-300 ease-in-out md:px-7 md:py-3'
+                            >
+                                Xem trailer
+                            </button>
                         </div>
                     </div>
                 ))}
             </Slider>
 
+            {/* Trailer modal */}
             {showTrailer && trailer && (
-                <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-                    <div className="relative w-[800px] h-[450px]">
+                <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4'>
+                    <div className='relative w-full max-w-[900px] aspect-video'>
                         <button
-                            onClick={handleCloseTrailer}
-                            className="absolute top-4 right-4 z-50 cursor-pointer"
+                            onClick={() => setShowTrailer(false)}
+                            className='absolute -top-8 right-0 z-50 cursor-pointer text-white hover:text-red-400 transition'
                         >
-                            <i className="fa-solid fa-xmark text-white text-[30px]"></i>
+                            <i className='fa-solid fa-xmark text-[24px]'></i>
                         </button>
-
                         <iframe
-                            width="100%"
-                            height="100%"
-                            src={trailer.replace("watch?v=", "embed/")}
-                            title="Trailer"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            width='100%'
+                            height='100%'
+                            src={trailer.replace('watch?v=', 'embed/')}
+                            title='Trailer'
+                            frameBorder='0'
+                            allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
                             allowFullScreen
-                        ></iframe>
+                        />
                     </div>
                 </div>
             )}
