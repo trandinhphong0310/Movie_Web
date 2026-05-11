@@ -1,21 +1,11 @@
-import { useEffect, useState } from 'react'
-import { getMoviesBySlugCategory } from '../../api/phim_api'
+import { useGetMoviesBySlugCategoryQuery } from '../../redux/services/movieApi'
 import { Link } from 'react-router-dom'
 import MovieItemCard from '../shared/MovieItemCard'
 
 export default function MovieSection({ slug }) {
-    const [movies, setMovies] = useState([])
-    const [title, setTitle] = useState('')
-
-    useEffect(() => {
-        getMoviesBySlugCategory(slug)
-            .then(data => {
-                if (data) {
-                    setMovies(data.items)
-                    setTitle(data.breadCrumb?.[0]?.name || '')
-                }
-            })
-    }, [slug])
+    const { data } = useGetMoviesBySlugCategoryQuery({ slug })
+    const movies = data?.items || []
+    const title = data?.breadCrumb?.[0]?.name || ''
 
     return (
         <>

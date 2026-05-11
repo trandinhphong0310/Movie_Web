@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import ScrollToTop from "./components/shared/ScrollToTop"
 
 import Header from "./components/layouts/Header"
 import Footer from "./components/layouts/Footer"
@@ -39,6 +40,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <BrowserRouter>
+        <ScrollToTop />
         <Header />
         <main className="flex-grow">
           <Suspense fallback={<PageLoader />}>

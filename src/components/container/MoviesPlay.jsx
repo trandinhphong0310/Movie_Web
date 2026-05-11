@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useMovieDetail } from '../../hooks/useMovieDetail'
 import ActorList from '../shared/ActorList'
@@ -12,6 +13,10 @@ export default function MoviesPlay() {
 
     const epParam = searchParams.get('ep')
     const currentEpisode = episodes.find(e => e.name === epParam) || episodes[0] || null
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, [epParam])
 
     if (loading || !movies) {
         return <div className='text-white text-center py-20'>Đang tải tập phim...</div>

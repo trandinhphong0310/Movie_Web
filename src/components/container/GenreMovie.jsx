@@ -1,33 +1,18 @@
-import { useEffect, useState } from 'react'
-import { getMoviesByGenre } from '../../api/phim_api'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { useGetMoviesByGenreQuery } from '../../redux/services/movieApi'
 import MovieGrid from '../shared/MovieGrid'
 import Pagination from '../shared/Pagination'
 
 export default function GenreMovie() {
-    const [movies, setMovies] = useState([])
-    const [title, setTitle] = useState('')
-    const [totalPage, setTotalPage] = useState(0)
     const { slug } = useParams()
     const [searchParams, setSearchParams] = useSearchParams()
-
     const page = Number(searchParams.get('page')) || 1
     const limit = Number(searchParams.get('limit')) || 24
 
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }, [page])
-
-    useEffect(() => {
-        getMoviesByGenre(slug, page, limit)
-            .then(data => {
-                if (data) {
-                    setMovies(data.items)
-                    setTitle(data.seoOnPage?.titleHead || '')
-                    setTotalPage(Math.ceil(data.params?.pagination?.totalItems / limit))
-                }
-            })
-    }, [slug, page, limit])
+    const { data } = useGetMoviesByGenreQuery({ slug, page, limit })
+    const movies = data?.items || []
+    const title = data?.seoOnPage?.titleHead || ''
+    const totalPage = Math.ceil((data?.params?.pagination?.totalItems || 0) / limit)
 
     const handlePrev = () => setSearchParams({ page: page - 1, limit })
     const handleNext = () => setSearchParams({ page: page + 1, limit })

@@ -1,30 +1,33 @@
-import { useEffect, useState } from 'react'
-import { getMoviesBySlugCategory, getMoviesDetail } from '../../api/phim_api'
+import { useState, useEffect } from 'react'
+import { useGetMoviesBySlugCategoryQuery, useGetMoviesDetailQuery } from '../../redux/services/movieApi'
 import "slick-carousel/slick/slick.css"
 import "slick-carousel/slick/slick-theme.css"
 import Slider from 'react-slick'
 
 export default function Banner() {
-    const [movie, setMovie] = useState([])
     const [trailer, setTrailer] = useState('')
     const [showTrailer, setShowTrailer] = useState(false)
+    const [trailerSlug, setTrailerSlug] = useState(null)
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
-    useEffect(() => {
-        getMoviesBySlugCategory('phim-sap-chieu')
-            .then(data => { if (data) setMovie(data.items.slice(0, 5)) })
-    }, [])
+    const { data: bannerData } = useGetMoviesBySlugCategoryQuery({ slug: 'phim-sap-chieu' })
+    const movie = (bannerData?.items || []).slice(0, 5)
 
-    const handleWatchTrailer = async (slug) => {
-        try {
-            const detail = await getMoviesDetail(slug)
-            if (detail?.item.trailer_url) {
-                setTrailer(detail.item.trailer_url)
-                setShowTrailer(true)
-            } else {
-                alert('Phim chưa có trailer')
-            }
-        } catch (err) { console.error(err) }
+    const { data: trailerData } = useGetMoviesDetailQuery(trailerSlug, { skip: !trailerSlug })
+
+    // Khi trailerData thay đổi, cập nhật link trailer
+    useEffect(() => {
+        if (trailerData?.item?.trailer_url) {
+            setTrailer(trailerData.item.trailer_url)
+            setShowTrailer(true)
+        } else if (trailerSlug && trailerData) {
+            alert('Phim chưa có trailer')
+            setTrailerSlug(null)
+        }
+    }, [trailerData])
+
+    const handleWatchTrailer = (slug) => {
+        setTrailerSlug(slug)
     }
 
     const settings = {

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { getMoviesApi } from '../../api/phim_api'
+import { useGetHomeMoviesQuery } from '../../redux/services/movieApi'
 import MovieItemCard from '../shared/MovieItemCard'
 import MovieGrid from '../shared/MovieGrid'
 
 export default function PopularMovies() {
-    const [movies, setMovies] = useState([])
+    const { data: movies = [], isLoading, isFetching } = useGetHomeMoviesQuery()
     const [isMobile, setIsMobile] = useState(false)
 
     // Kiểm tra kích thước màn hình
@@ -13,12 +13,6 @@ export default function PopularMovies() {
         checkMobile()
         window.addEventListener('resize', checkMobile)
         return () => window.removeEventListener('resize', checkMobile)
-    }, [])
-
-    useEffect(() => {
-        getMoviesApi().then(items => {
-            if (items) setMovies(items)
-        })
     }, [])
 
     // filter: chỉ hiện phim có imdb hoặc tmdb >= 5, giới hạn 12 phim

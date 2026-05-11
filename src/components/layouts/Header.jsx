@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { FaSearch, FaChevronDown, FaBars, FaTimes } from 'react-icons/fa'
-import { getMoviesCountry, getMoviesGenre, searchMoviesByKeyWords } from '../../api/phim_api'
+import { useGetMoviesGenreQuery, useGetMoviesCountryQuery, useSearchMoviesByKeyWordsQuery } from '../../redux/services/movieApi'
 import { Link, useNavigate } from 'react-router-dom'
 
 export default function Header() {
-  const [genre, setGenre] = useState([])
-  const [country, setCountry] = useState([])
+  const { data: genre = [] } = useGetMoviesGenreQuery()
+  const { data: country = [] } = useGetMoviesCountryQuery()
   const [scroll, setScrolled] = useState(false)
   const [searchMovies, setSearchMovies] = useState([])
   const [keywords, setKeywords] = useState('')
@@ -17,19 +17,16 @@ export default function Header() {
   const base_url = import.meta.env.VITE_BASE_IMG_URL
   const searchRef = useRef(null)
 
-  // Search realtime
-  useEffect(() => {
-    if (!keywords.trim()) { setSearchMovies([]); return }
-    searchMoviesByKeyWords(keywords).then(data => {
-      if (data) setSearchMovies(data.items)
-    })
-  }, [keywords])
+  const { data: searchData } = useSearchMoviesByKeyWordsQuery(keywords, { skip: !keywords.trim() })
 
-  // Fetch genre + country
+  // Cập nhật kết quả tìm kiếm khi searchData từ API trả về
   useEffect(() => {
-    getMoviesGenre().then(items => { if (items) setGenre(items) })
-    getMoviesCountry().then(items => { if (items) setCountry(items) })
-  }, [])
+    if (!keywords.trim()) {
+      setSearchMovies([])
+    } else if (searchData?.items) {
+      setSearchMovies(searchData.items)
+    }
+  }, [searchData, keywords])
 
   // Scroll effect
   useEffect(() => {
@@ -92,19 +89,21 @@ export default function Header() {
                before:content-[''] before:absolute before:top-[-20px] before:left-0
                before:w-full before:h-[20px] before:bg-transparent">
             <ul className='flex flex-wrap gap-1'>
-              {genre.map(item => (
-                <li key={item._id}>
-                  <Link
-                    to={`/the-loai/${item.slug}?page=1&limit=24`}
-                    onClick={closeAll}
-                    className='block text-[13px] px-3 py-1.5 rounded-lg text-gray-300
+              {genre
+                .filter(item => item.name !== 'Phim 18+')
+                .map(item => (
+                  <li key={item._id}>
+                    <Link
+                      to={`/the-loai/${item.slug}?page=1&limit=24`}
+                      onClick={closeAll}
+                      className='block text-[13px] px-3 py-1.5 rounded-lg text-gray-300
                       hover:text-white hover:bg-red-500/15 hover:border-red-500/30
                       border border-transparent whitespace-nowrap transition-all duration-150'
-                  >
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
         </li>
@@ -145,6 +144,7 @@ export default function Header() {
           <Link to="/danh-sach/phim-bo?page=1&limit=24">Phim Bộ</Link>
         </li>
       </ul>
+
 
       {/* Desktop Search + User */}
       <div className='hidden md:flex items-center justify-end'>
