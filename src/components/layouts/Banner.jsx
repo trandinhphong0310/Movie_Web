@@ -12,7 +12,7 @@ export default function Banner() {
 
     useEffect(() => {
         getMoviesBySlugCategory('phim-sap-chieu')
-            .then(data => { if (data) setMovie(data.items) })
+            .then(data => { if (data) setMovie(data.items.slice(0, 5)) })
     }, [])
 
     const handleWatchTrailer = async (slug) => {

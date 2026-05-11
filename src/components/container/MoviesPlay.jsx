@@ -32,16 +32,20 @@ export default function MoviesPlay() {
             </div>
 
             {/* Video player — responsive aspect ratio */}
-            <div className='mb-6 w-full aspect-video'>
-                <iframe
-                    src={currentEpisode.link_embed}
-                    frameBorder='0'
-                    allowFullScreen
-                    width='100%'
-                    height='100%'
-                    title={`Episode ${currentEpisode.name}`}
-                    className='rounded-xl'
-                />
+            <div className='mb-6 w-full aspect-video bg-black/50 rounded-xl overflow-hidden flex items-center justify-center'>
+                {currentEpisode?.link_embed ? (
+                    <iframe
+                        src={currentEpisode.link_embed}
+                        frameBorder='0'
+                        allowFullScreen
+                        width='100%'
+                        height='100%'
+                        title={`Episode ${currentEpisode.name}`}
+                        className='rounded-xl'
+                    />
+                ) : (
+                    <span className="text-white/50">Đang tải video...</span>
+                )}
             </div>
 
             {/* Movie info block */}
