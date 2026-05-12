@@ -156,7 +156,7 @@ export default function Header() {
             value={keywords}
             onChange={e => setKeywords(e.target.value)}
             placeholder='Tìm kiếm phim'
-            className='bg-[rgba(255,255,255,.08)] text-white pl-8 pr-2 py-2 border border-transparent rounded-xl text-sm w-full h-[40px] focus:outline-none focus:border-white'
+            className='bg-[rgba(255,255,255,.08)] text-white pl-8 pr-2 py-2 border border-transparent rounded-xl text-base w-full h-[40px] focus:outline-none focus:border-white'
           />
           {/* Search dropdown */}
           {searchMovies.length > 0 && (
@@ -202,7 +202,7 @@ export default function Header() {
               value={keywords}
               onChange={e => setKeywords(e.target.value)}
               placeholder='Tìm kiếm phim...'
-              className='bg-transparent text-white text-sm w-full focus:outline-none placeholder-gray-400'
+              className='bg-transparent text-white text-base w-full focus:outline-none placeholder-gray-400'
             />
             {/* Search dropdown */}
             {searchMovies.length > 0 && (

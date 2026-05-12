@@ -12,9 +12,13 @@ export function useMovieDetail(slug) {
     const category = detailData?.item?.category || []
     const country = detailData?.item?.country?.[0] || null
     const imdb = detailData?.item?.imdb || {}
-    const episodes = detailData?.item?.episodes?.[0]?.server_data || []
-    const actor = actorData?.peoples || []
+    const tmdb = detailData?.item?.tmdb || {}
+    const servers = detailData?.item?.episodes || []          // Tất cả các server
+    const episodes = servers[0]?.server_data || []            // Server đầu tiên mặc định
+    const actor = detailData?.item?.actor || []               // Diễn viên từ item
+    const director = detailData?.item?.director || []         // Đạo diễn
+    const peoples = actorData?.peoples || []                  // Avatar actors
     const loading = loadingDetail || loadingActor
 
-    return { movies, category, country, episodes, imdb, actor, loading }
+    return { movies, category, country, episodes, servers, imdb, tmdb, actor, director, peoples, loading }
 }

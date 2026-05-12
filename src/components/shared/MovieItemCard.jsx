@@ -2,6 +2,19 @@ import { Link } from 'react-router-dom'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
+const LANG_MAP = {
+    'Vietsub':               { label: 'Vietsub',      cls: 'bg-[#1a5c39] text-emerald-200' },
+    'Vietsub + Thuyết minh': { label: 'Vsub + TM',    cls: 'bg-[#1a3a5c] text-blue-200' },
+    'Thuyết minh':           { label: 'Thuyết minh', cls: 'bg-[#1a3a5c] text-blue-200' },
+    'Lồng tiếng':            { label: 'Lồng tiếng',  cls: 'bg-[#4a1a5c] text-purple-200' },
+}
+
+function LangBadge({ lang, className = '' }) {
+    if (!lang) return null
+    const config = LANG_MAP[lang] || { label: lang, cls: 'bg-[#5e6070] text-gray-200' }
+    return <span className={`movies-card_lang ${config.cls} ${className}`}>{config.label}</span>
+}
+
 /**
  * Reusable movie card (thumbnail + info) used by MovieGrid, SearchResults, etc.
  * Supports two layouts:
@@ -19,9 +32,9 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
                         <img src={`${base_url}/${item.thumb_url}`} alt={item.name}
                             loading='lazy' decoding='async'
                             className='w-full rounded-lg aspect-[2/3] md:aspect-video md:object-cover' />
-                        <div className="absolute bottom-0 left-2 flex gap-1">
-                            <span className='movies-card_lang'>{item.lang === 'Vietsub' ? 'P.Đề' : 'Ko P.Đề'}</span>
-                            <span className='movies-card_episode'>{item.episode_current}</span>
+                        <div className="absolute bottom-[-1px] left-2 flex gap-1 max-w-[calc(100%-8px)]">
+                            <LangBadge lang={item.lang} className='max-w-[60%] truncate' />
+                            <span className='movies-card_episode whitespace-nowrap flex-shrink-0'>{item.episode_current}</span>
                         </div>
                     </div>
                     <h3 className='movies-card_name mt-2 text-[15px]'>{item.name}</h3>
@@ -48,7 +61,7 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
                     <p className='movies-card_time'>{item.time}</p>
                     <p className='movies-card_year'>{item.year}</p>
                     <div className='movies-card-lang_episode'>
-                        <span className='movies-card_lang'>{item.lang === 'Vietsub' ? 'P.Đề' : 'Ko P.Đề'}</span>
+                        <LangBadge lang={item.lang} />
                         <span className='movies-card_episode'>{item.episode_current}</span>
                     </div>
                 </div>
