@@ -1,10 +1,21 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
+function buildParams({ page = 1, limit = 24, country = '', category = '', year = '', sort = '' } = {}) {
+  const p = new URLSearchParams({ page, limit })
+  if (country)  p.set('country', country)
+  if (category) p.set('category', category)
+  if (year)     p.set('year', year)
+  if (sort) {
+    const [field, type] = sort.split('|')
+    if (field) p.set('sort_field', field)
+    if (type)  p.set('sort_type', type)
+  }
+  return p.toString()
+}
+
 export const movieApi = createApi({
   reducerPath: 'movieApi',
-  // Lấy baseUrl từ file .env giống như file api cũ của bạn
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_KEY }),
-  // Khai báo các API endpoints
   endpoints: (builder) => ({
     getHomeMovies: builder.query({
       query: () => '/home',
@@ -19,15 +30,15 @@ export const movieApi = createApi({
       transformResponse: (response) => response.data.items,
     }),
     getMoviesByGenre: builder.query({
-      query: ({ slug, page = 1, limit = 24 }) => `/the-loai/${slug}?page=${page}&limit=${limit}`,
+      query: ({ slug, ...rest }) => `/the-loai/${slug}?${buildParams(rest)}`,
       transformResponse: (response) => response.data,
     }),
     getMoviesByCountry: builder.query({
-      query: ({ slug, page = 1, limit = 24 }) => `/quoc-gia/${slug}?page=${page}&limit=${limit}`,
+      query: ({ slug, ...rest }) => `/quoc-gia/${slug}?${buildParams(rest)}`,
       transformResponse: (response) => response.data,
     }),
     getMoviesBySlugCategory: builder.query({
-      query: ({ slug, page = 1, limit = 24 }) => `/danh-sach/${slug}?page=${page}&limit=${limit}`,
+      query: ({ slug, ...rest }) => `/danh-sach/${slug}?${buildParams(rest)}`,
       transformResponse: (response) => response.data,
     }),
     searchMoviesByKeyWords: builder.query({
@@ -45,7 +56,7 @@ export const movieApi = createApi({
   }),
 })
 
-export const { 
+export const {
   useGetHomeMoviesQuery,
   useGetMoviesGenreQuery,
   useGetMoviesCountryQuery,
@@ -54,5 +65,5 @@ export const {
   useGetMoviesBySlugCategoryQuery,
   useSearchMoviesByKeyWordsQuery,
   useGetMoviesDetailQuery,
-  useGetActorForMoviesQuery
+  useGetActorForMoviesQuery,
 } = movieApi

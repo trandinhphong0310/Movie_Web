@@ -60,10 +60,11 @@ export default function MoviesPlay() {
     const rating = imdb?.vote_average || tmdb?.vote_average || null
 
     return (
-        <div className='pt-[60px] md:pt-[70px]'>
+        <div className='pt-[60px] md:pt-[120px]'>
 
             {/* ── Video Player Full Width ── */}
-            <div className='w-full bg-black aspect-video relative'>
+            <div className='w-full bg-black' style={{ aspectRatio: '14/7' }} >
+                <div className='relative w-full h-full'>
                 {currentEpisode?.link_embed ? (
                     <iframe
                         key={currentEpisode.link_embed}
@@ -81,6 +82,7 @@ export default function MoviesPlay() {
                         Không có nguồn phát
                     </div>
                 )}
+                </div>
             </div>
 
             {/* ── Controls Bar: title + server selector ── */}
