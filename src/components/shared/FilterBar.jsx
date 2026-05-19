@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useGetMoviesGenreQuery, useGetMoviesCountryQuery } from '../../redux/services/movieApi'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -15,30 +15,57 @@ const SORT_OPTIONS = [
     { value: 'episode_current|asc',    label: 'Ngắn nhất' },
 ]
 
-const TYPES = [
-    { slug: 'phim-bo',        label: 'Phim bộ' },
-    { slug: 'phim-le',        label: 'Phim lẻ' },
-    { slug: 'phim-hoat-hinh', label: 'Hoạt hình' },
-]
-
-// ── Desktop select dropdown ──
+// ── Custom dropdown ──
 function Select({ label, value, onChange, options, valueKey = 'value', labelKey = 'label' }) {
+    const [open, setOpen] = useState(false)
+    const ref = useRef(null)
+
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+        document.addEventListener('mousedown', handler)
+        return () => document.removeEventListener('mousedown', handler)
+    }, [])
+
+    const selected = options.find(o => (o[valueKey] ?? o) === value)
+    const displayLabel = selected ? (selected[labelKey] ?? selected) : null
+
     return (
-        <div className='relative'>
-            <select
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                className='bg-[#1a1d2e] text-[13px] px-3 py-2 pr-8 rounded-lg border border-white/10 focus:outline-none focus:border-red-500/60 cursor-pointer appearance-none min-w-[120px] max-w-[160px] truncate transition-colors'
-                style={{ color: value ? '#fff' : '#9ca3af' }}
+        <div ref={ref} className='relative'>
+            <button
+                onClick={() => setOpen(v => !v)}
+                className={`flex items-center gap-2 bg-[#1a1d2e] text-[13px] px-3 py-2 rounded-lg border transition-colors min-w-[120px] max-w-[160px]
+                    ${open ? 'border-red-500/60' : 'border-white/10 hover:border-white/25'}
+                    ${value ? 'text-white' : 'text-gray-400'}`}
             >
-                <option value=''>{label}</option>
-                {options.map(o => (
-                    <option key={o[valueKey] ?? o} value={o[valueKey] ?? o}>
-                        {o[labelKey] ?? o}
-                    </option>
-                ))}
-            </select>
-            <span className='pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-[9px]'>▼</span>
+                <span className='truncate flex-1 text-left'>{displayLabel || label}</span>
+                <span className={`text-[9px] text-gray-500 flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+
+            {open && (
+                <div className='absolute top-[calc(100%+4px)] left-0 z-50 bg-[#1a1d2e] border border-white/10 rounded-lg shadow-2xl min-w-[160px] max-h-[260px] overflow-y-auto dropdown-scroll'>
+                    <button
+                        onClick={() => { onChange(''); setOpen(false) }}
+                        className={`w-full text-left px-3 py-2 text-[13px] hover:bg-white/5 transition-colors rounded-t-lg
+                            ${!value ? 'text-white font-medium' : 'text-gray-400'}`}
+                    >
+                        {label}
+                    </button>
+                    {options.map(o => {
+                        const val = o[valueKey] ?? o
+                        const lbl = o[labelKey] ?? o
+                        return (
+                            <button
+                                key={val}
+                                onClick={() => { onChange(val); setOpen(false) }}
+                                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-white/5 transition-colors
+                                    ${value === val ? 'text-red-400 font-medium bg-red-500/5' : 'text-gray-300'}`}
+                            >
+                                {lbl}
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }
@@ -85,13 +112,13 @@ function Pill({ label, active, onClick }) {
 // ──────────────────────────────────────────────
 // pageType: 'danh-sach' | 'the-loai' | 'quoc-gia'
 // ──────────────────────────────────────────────
-export default function FilterBar({ pageType, currentSlug }) {
-    const navigate = useNavigate()
+export default function FilterBar({ pageType }) {
     const [searchParams, setSearchParams] = useSearchParams()
     const [sheetOpen, setSheetOpen] = useState(false)
 
-    const { data: genres    = [] } = useGetMoviesGenreQuery()
+    const { data: genresRaw = [] } = useGetMoviesGenreQuery()
     const { data: countries = [] } = useGetMoviesCountryQuery()
+    const genres = genresRaw.filter(g => g.name !== 'Phim 18+')
 
     const selectedCountry  = searchParams.get('country')  || ''
     const selectedCategory = searchParams.get('category') || ''
@@ -129,24 +156,6 @@ export default function FilterBar({ pageType, currentSlug }) {
     const categoryName = genres.find(g => g.slug === selectedCategory)?.name
     const sortLabel    = SORT_OPTIONS.find(o => o.value === selectedSort)?.label
 
-    const typePills = (
-        <div className='flex items-center gap-1.5 flex-wrap'>
-            {TYPES.map(({ slug, label }) => (
-                <button
-                    key={slug}
-                    onClick={() => navigate(`/danh-sach/${slug}?page=1&limit=24`)}
-                    className={`px-4 py-1.5 text-[13px] rounded-lg border transition-all font-medium ${
-                        pageType === 'danh-sach' && currentSlug === slug
-                            ? 'bg-red-600 border-red-500 text-white shadow-sm shadow-red-900/40'
-                            : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/25'
-                    }`}
-                >
-                    {label}
-                </button>
-            ))}
-        </div>
-    )
-
     const activeChips = (countryName || categoryName || selectedYear || sortLabel) && (
         <div className='flex flex-wrap items-center gap-1.5'>
             <span className='text-gray-500 text-[11px] uppercase tracking-wide mr-1'>Đang lọc:</span>
@@ -161,8 +170,6 @@ export default function FilterBar({ pageType, currentSlug }) {
         <>
             {/* ═══════════════ DESKTOP (md+) ═══════════════ */}
             <div className='hidden md:block space-y-3 pb-4'>
-                {typePills}
-
                 <div className='flex flex-wrap items-center gap-2'>
                     {pageType !== 'quoc-gia' && (
                         <Select label='Quốc gia' value={selectedCountry}
@@ -197,26 +204,8 @@ export default function FilterBar({ pageType, currentSlug }) {
 
             {/* ═══════════════ MOBILE (<md) ═══════════════ */}
             <div className='md:hidden space-y-2.5 pb-3'>
-                {/* Type pills + filter button row */}
                 <div className='flex items-center gap-2'>
-                    <div className='flex-1 overflow-x-auto scrollbar-hide'>
-                        <div className='flex items-center gap-1.5 w-max'>
-                            {TYPES.map(({ slug, label }) => (
-                                <button
-                                    key={slug}
-                                    onClick={() => navigate(`/danh-sach/${slug}?page=1&limit=24`)}
-                                    className={`px-3.5 py-1.5 text-[13px] rounded-lg border transition-all font-medium whitespace-nowrap ${
-                                        pageType === 'danh-sach' && currentSlug === slug
-                                            ? 'bg-red-600 border-red-500 text-white'
-                                            : 'bg-white/5 border-white/10 text-gray-400'
-                                    }`}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
+                    <div className='flex-1' />
                     {/* Filter trigger button */}
                     <button
                         onClick={() => setSheetOpen(true)}

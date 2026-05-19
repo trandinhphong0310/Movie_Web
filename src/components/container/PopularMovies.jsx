@@ -4,7 +4,7 @@ import MovieItemCard from '../shared/MovieItemCard'
 import MovieGrid from '../shared/MovieGrid'
 
 export default function PopularMovies() {
-    const { data: movies = [], isLoading, isFetching } = useGetHomeMoviesQuery()
+    const { data: movies = [] } = useGetHomeMoviesQuery()
     const [isMobile, setIsMobile] = useState(false)
 
     // Kiểm tra kích thước màn hình
@@ -15,10 +15,10 @@ export default function PopularMovies() {
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
 
-    // filter: chỉ hiện phim có imdb hoặc tmdb >= 5, giới hạn 12 phim
-    const filterFn = item => (item.imdb?.vote_average >= 5 || item.tmdb?.vote_average >= 5)
+    // filter: chỉ hiện phim có imdb hoặc tmdb >= 7, giới hạn 12 phim
+    const filterFn = item => (item.imdb?.vote_average >= 7 || item.tmdb?.vote_average >= 7)
     
-    const filteredMovies = movies.filter(filterFn).slice(0, 12)
+    const filteredMovies = movies.filter(filterFn).slice(0, 16)
 
     return (
         <div className='container mx-auto px-4 pt-[60px] md:pt-[90px] pb-[40px] md:pb-[60px]'>

@@ -16,7 +16,7 @@ export default function ActorList({ actors = [], limit = 6 }) {
                     <div key={index} className='flex flex-col items-center w-[60px] group'>
                         <div className='w-[56px] h-[56px] rounded-full overflow-hidden border-2 border-white/10 group-hover:border-red-500/60 transition-colors'>
                             <img
-                                src={`${actor_img_url}/${item.profile_path}`}
+                                src={`${actor_img_url}${item.profile_path}`}
                                 alt={item.name}
                                 loading='lazy'
                                 decoding='async'

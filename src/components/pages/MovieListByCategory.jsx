@@ -27,7 +27,7 @@ export default function MovieListByCategory() {
     return (
         <div className='container mx-auto px-4 pt-[80px] md:pt-[90px]'>
             <h2 className='font-semibold text-white text-[22px] sm:text-[28px] py-4'>{title}</h2>
-            <FilterBar pageType='danh-sach' currentSlug={slug} />
+            <FilterBar pageType='danh-sach' />
             <MovieGrid movies={movies} />
             <Pagination page={page} totalPage={totalPage} onPrev={handlePrev} onNext={handleNext} />
         </div>

@@ -18,7 +18,8 @@ export function useMovieDetail(slug) {
     const actor = detailData?.item?.actor || []               // Diễn viên từ item
     const director = detailData?.item?.director || []         // Đạo diễn
     const peoples = actorData?.peoples || []                  // Avatar actors
+    const trailer_url = detailData?.item?.trailer_url || ''
     const loading = loadingDetail || loadingActor
 
-    return { movies, category, country, episodes, servers, imdb, tmdb, actor, director, peoples, loading }
+    return { movies, category, country, episodes, servers, imdb, tmdb, actor, director, peoples, trailer_url, loading }
 }

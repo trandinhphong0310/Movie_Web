@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
-import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useMovieDetail } from '../../hooks/useMovieDetail'
+import { saveToHistory } from '../../hooks/useWatchHistory'
 import ActorList from '../shared/ActorList'
 import EpisodeList from '../shared/EpisodeList'
-import { FaStar, FaArrowLeft, FaClock, FaFilm } from 'react-icons/fa'
+import { SkeletonPlayer } from '../shared/SkeletonCard'
+import { FaStar, FaArrowLeft, FaClock, FaFilm, FaTimes, FaExpand } from 'react-icons/fa'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -23,14 +25,69 @@ function LangBadge({ lang }) {
 export default function MoviesPlay() {
     const { slug } = useParams()
     const [searchParams] = useSearchParams()
+    const navigate = useNavigate()
     const { movies, category, episodes, servers, imdb, tmdb, director, peoples, loading } = useMovieDetail(slug)
 
-    // Server đang chọn (index)
     const [serverIdx, setServerIdx] = useState(0)
     const activeServerData = servers[serverIdx]?.server_data || episodes
 
     const epParam = searchParams.get('ep')
     const currentEpisode = activeServerData.find(e => e.name === epParam) || activeServerData[0] || null
+
+    // Mini player state
+    const playerContainerRef = useRef(null)
+    const miniDismissedRef = useRef(false)
+    const [isMini, setIsMini] = useState(false)
+    const [miniDismissed, setMiniDismissed] = useState(false)
+
+    // Focus guard — element ẩn để giữ focus trong parent document
+    const focusGuardRef = useRef(null)
+
+    useEffect(() => {
+        miniDismissedRef.current = miniDismissed
+    }, [miniDismissed])
+
+    // IntersectionObserver cho mini player
+    useEffect(() => {
+        const el = playerContainerRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!miniDismissedRef.current) setIsMini(!entry.isIntersecting)
+            },
+            { threshold: 0 }
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
+
+    // Reset mini player khi đổi tập
+    useEffect(() => {
+        setIsMini(false)
+        setMiniDismissed(false)
+        miniDismissedRef.current = false
+    }, [currentEpisode?.link_embed])
+
+    // Lưu lịch sử xem khi bắt đầu xem tập
+    useEffect(() => {
+        if (!movies || !currentEpisode) return
+        saveToHistory({
+            slug,
+            name: movies.name,
+            origin_name: movies.origin_name,
+            thumb_url: movies.thumb_url,
+            epName: currentEpisode.name,
+            watchedAt: Date.now(),
+        })
+    }, [slug, movies, currentEpisode])
+
+    // Dynamic page title
+    useEffect(() => {
+        if (!movies?.name) return
+        const ep = currentEpisode?.name && currentEpisode.name !== 'Full' ? ` - Tập ${currentEpisode.name}` : ''
+        document.title = `${movies.name}${ep} | CineHub`
+        return () => { document.title = 'CineHub' }
+    }, [movies?.name, currentEpisode?.name])
 
     // Scroll lên đầu khi đổi tập
     useEffect(() => {
@@ -42,54 +99,98 @@ export default function MoviesPlay() {
         setServerIdx(0)
     }, [slug])
 
-    if (loading || !movies) {
-        return (
-            <div className='flex items-center justify-center min-h-[60vh]'>
-                <div className='flex flex-col items-center gap-3'>
-                    <div className='w-10 h-10 border-4 border-white/20 border-t-red-500 rounded-full animate-spin' />
-                    <span className='text-white/60 text-sm'>Đang tải phim...</span>
-                </div>
-            </div>
-        )
-    }
+    // Poll để steal focus từ iframe về focusGuard (cross-origin iframe chặn keyboard events)
+    useEffect(() => {
+        const poll = setInterval(() => {
+            if (document.activeElement?.tagName === 'IFRAME') {
+                focusGuardRef.current?.focus({ preventScroll: true })
+            }
+        }, 300)
+        return () => clearInterval(poll)
+    }, [])
 
-    if (!currentEpisode) {
-        return <div className='text-white text-center py-20'>Không tìm thấy tập phim.</div>
-    }
+    // Keyboard shortcuts — hoạt động nhờ focusGuard giữ focus trong parent document
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+            const currentName = epParam || activeServerData[0]?.name
+            const idx = activeServerData.findIndex(ep => ep.name === currentName)
+
+            if (e.key === 'ArrowRight' || e.key === 'n') {
+                const next = activeServerData[idx + 1]
+                if (next) navigate(`/xem-phim/${slug}?ep=${next.name}`)
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'p') {
+                const prev = activeServerData[idx - 1]
+                if (prev) navigate(`/xem-phim/${slug}?ep=${prev.name}`)
+            }
+            if (e.key === 'Escape') navigate(`/phim/${slug}`)
+        }
+
+        window.addEventListener('keydown', handleKey)
+        return () => window.removeEventListener('keydown', handleKey)
+    }, [slug, epParam, activeServerData, navigate])
+
+    if (loading || !movies) return <SkeletonPlayer />
+    if (!currentEpisode) return <div className='text-white text-center py-20'>Không tìm thấy tập phim.</div>
 
     const rating = imdb?.vote_average || tmdb?.vote_average || null
 
+    const showMiniPlayer = isMini && !miniDismissed && currentEpisode?.link_embed
+
     return (
         <div className='pt-[60px] md:pt-[120px]'>
+            {/* Focus guard: element ẩn để giữ keyboard focus trong parent khi iframe steal focus */}
+            <div ref={focusGuardRef} tabIndex={-1} className='sr-only' aria-hidden='true' />
 
             {/* ── Video Player Full Width ── */}
-            <div className='w-full bg-black' style={{ aspectRatio: '14/7' }} >
-                <div className='relative w-full h-full'>
-                {currentEpisode?.link_embed ? (
-                    <iframe
-                        key={currentEpisode.link_embed}
-                        src={currentEpisode.link_embed}
-                        frameBorder='0'
-                        allowFullScreen
-                        allow='autoplay; encrypted-media; picture-in-picture'
-                        width='100%'
-                        height='100%'
-                        title={`${movies.name} - Tập ${currentEpisode.name}`}
-                        className='absolute inset-0 w-full h-full'
-                    />
-                ) : (
-                    <div className='flex items-center justify-center h-full text-white/40 text-sm'>
-                        Không có nguồn phát
-                    </div>
-                )}
+            <div ref={playerContainerRef} className='w-full bg-black relative' style={{ aspectRatio: '14/7' }}>
+                {/* Inner div: bình thường fill full, khi mini → fixed ở góc */}
+                <div className={
+                    showMiniPlayer
+                        ? 'fixed bottom-4 right-4 z-[200] w-[300px] sm:w-[360px] bg-black rounded-xl overflow-hidden shadow-2xl border border-white/20'
+                        : 'absolute inset-0'
+                }>
+                    {showMiniPlayer && (
+                        <div className='absolute top-2 right-2 z-10 flex gap-1.5'>
+                            <button
+                                onClick={() => navigate(`/xem-phim/${slug}?ep=${currentEpisode.name}`)}
+                                className='w-7 h-7 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-white/20 transition'
+                                title='Mở rộng'
+                            >
+                                <FaExpand size={10} />
+                            </button>
+                            <button
+                                onClick={() => { setMiniDismissed(true); miniDismissedRef.current = true }}
+                                className='w-7 h-7 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-red-500 transition'
+                                title='Đóng'
+                            >
+                                <FaTimes size={10} />
+                            </button>
+                        </div>
+                    )}
+                    {currentEpisode?.link_embed ? (
+                        <iframe
+                            key={currentEpisode.link_embed}
+                            src={currentEpisode.link_embed}
+                            frameBorder='0'
+                            allowFullScreen
+                            allow='autoplay; encrypted-media; picture-in-picture'
+                            title={`${movies.name} - Tập ${currentEpisode.name}`}
+                            className={showMiniPlayer ? 'w-full aspect-video block' : 'absolute inset-0 w-full h-full'}
+                        />
+                    ) : (
+                        <div className='flex items-center justify-center h-full text-white/40 text-sm'>
+                            Không có nguồn phát
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* ── Controls Bar: title + server selector ── */}
+            {/* ── Controls Bar ── */}
             <div className='bg-[#0d0f18] border-b border-white/5 px-4 md:px-8 py-3'>
                 <div className='max-w-[1400px] mx-auto flex flex-col sm:flex-row sm:items-center gap-3 justify-between'>
 
-                    {/* Tên phim + tập */}
                     <div className='flex items-center gap-3 min-w-0'>
                         <Link to={`/phim/${slug}`}
                             className='flex-shrink-0 flex items-center gap-1 text-white/50 hover:text-white transition text-sm'>
@@ -104,39 +205,44 @@ export default function MoviesPlay() {
                         </h1>
                     </div>
 
-                    {/* Chọn server */}
-                    {servers.length > 1 && (
-                        <div className='flex items-center gap-2 flex-shrink-0'>
-                            <span className='text-gray-500 text-[12px] uppercase tracking-wide'>Server:</span>
-                            <div className='flex gap-1.5 flex-wrap'>
-                                {servers.map((sv, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setServerIdx(idx)}
-                                        className={`px-3 py-1 text-[12px] rounded-md border transition-all ${idx === serverIdx
+                    <div className='flex items-center gap-4 flex-shrink-0'>
+                        {/* Keyboard hint */}
+                        <span className='hidden lg:flex items-center gap-2 text-gray-600 text-[11px]'>
+                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px]'>←</kbd>
+                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px]'>→</kbd>
+                            chuyển tập
+                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px] ml-1'>Esc</kbd>
+                            quay lại
+                        </span>
+
+                        {servers.length > 1 && (
+                            <div className='flex items-center gap-2'>
+                                <span className='text-gray-500 text-[12px] uppercase tracking-wide'>Server:</span>
+                                <div className='flex gap-1.5 flex-wrap'>
+                                    {servers.map((sv, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setServerIdx(idx)}
+                                            className={`px-3 py-1 text-[12px] rounded-md border transition-all ${idx === serverIdx
                                                 ? 'bg-red-600 border-red-500 text-white'
                                                 : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'
-                                            }`}
-                                    >
-                                        {sv.server_name || `Server ${idx + 1}`}
-                                    </button>
-                                ))}
+                                                }`}
+                                        >
+                                            {sv.server_name || `Server ${idx + 1}`}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* ── Nội dung bên dưới ── */}
             <div className='max-w-[1400px] mx-auto px-4 md:px-8 py-6'>
-
-                {/* Danh sách tập */}
                 <EpisodeList episodes={activeServerData} slug={slug} activeEp={epParam} />
 
-                {/* Info phim */}
                 <div className='mt-8 flex flex-col lg:flex-row gap-6'>
-
-                    {/* Poster */}
                     <div className='flex-shrink-0'>
                         <img
                             src={`${base_url}/${movies.thumb_url}`}
@@ -146,10 +252,7 @@ export default function MoviesPlay() {
                         />
                     </div>
 
-                    {/* Meta */}
                     <div className='flex-1 min-w-0'>
-
-                        {/* Tên + rating */}
                         <div className='flex flex-wrap items-start gap-3 mb-3'>
                             <h2 className='text-white text-[22px] md:text-[28px] font-bold leading-tight'>{movies.name}</h2>
                             {rating && (
@@ -162,7 +265,6 @@ export default function MoviesPlay() {
 
                         <p className='text-gray-500 text-[14px] mb-4 italic'>{movies.origin_name}</p>
 
-                        {/* Badges */}
                         <div className='flex flex-wrap gap-2 mb-4'>
                             {movies.quality && <span className='px-2.5 py-1 text-[12px] bg-red-600/80 text-white rounded-md font-medium'>{movies.quality}</span>}
                             {movies.lang && <LangBadge lang={movies.lang} />}
@@ -175,7 +277,6 @@ export default function MoviesPlay() {
                             )}
                         </div>
 
-                        {/* Thể loại */}
                         {category.length > 0 && (
                             <div className='flex flex-wrap gap-1.5 mb-4'>
                                 {category.map(c => (
@@ -187,7 +288,6 @@ export default function MoviesPlay() {
                             </div>
                         )}
 
-                        {/* Đạo diễn */}
                         {director.length > 0 && (
                             <p className='text-[13px] text-gray-400 mb-2'>
                                 <span className='text-gray-300 font-medium'>Đạo diễn:</span>{' '}
@@ -195,14 +295,12 @@ export default function MoviesPlay() {
                             </p>
                         )}
 
-                        {/* Mô tả */}
                         <div
                             className='text-gray-400 text-[14px] leading-relaxed line-clamp-4 lg:line-clamp-none'
                             dangerouslySetInnerHTML={{ __html: movies.content }}
                         />
                     </div>
 
-                    {/* Diễn viên (desktop) */}
                     {peoples.length > 0 && (
                         <div className='hidden lg:block flex-shrink-0 w-[200px]'>
                             <ActorList actors={peoples} limit={5} />
@@ -210,7 +308,6 @@ export default function MoviesPlay() {
                     )}
                 </div>
 
-                {/* Diễn viên (mobile) */}
                 {peoples.length > 0 && (
                     <div className='lg:hidden mt-6'>
                         <ActorList actors={peoples} limit={6} />

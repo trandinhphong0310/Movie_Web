@@ -5,7 +5,6 @@ import ScrollToTop from "./components/shared/ScrollToTop"
 import Header from "./components/layouts/Header"
 import Footer from "./components/layouts/Footer"
 
-// Lazy load từng trang — chỉ tải khi user navigate tới
 const Home               = lazy(() => import("./components/pages/Home"))
 const GenreMovie         = lazy(() => import("./components/container/GenreMovie"))
 const CountryMovie       = lazy(() => import("./components/container/CountryMovie"))
@@ -13,8 +12,10 @@ const MovieListByCategory = lazy(() => import("./components/pages/MovieListByCat
 const SearchResults      = lazy(() => import("./components/container/SearchResults"))
 const MoviesCard         = lazy(() => import("./components/container/MoviesCard"))
 const MoviesPlay         = lazy(() => import("./components/container/MoviesPlay"))
+const WatchHistory       = lazy(() => import("./components/pages/WatchHistory"))
+const Watchlist          = lazy(() => import("./components/pages/Watchlist"))
+const NotFound           = lazy(() => import("./components/pages/NotFound"))
 
-// Loading spinner hiện khi đang tải trang
 function PageLoader() {
   return (
     <div style={{
@@ -52,6 +53,9 @@ function App() {
               <Route path="/tim-kiem" element={<SearchResults />} />
               <Route path="/phim/:slug" element={<MoviesCard />} />
               <Route path="/xem-phim/:slug" element={<MoviesPlay />} />
+              <Route path="/lich-su" element={<WatchHistory />} />
+              <Route path="/yeu-thich" element={<Watchlist />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </main>

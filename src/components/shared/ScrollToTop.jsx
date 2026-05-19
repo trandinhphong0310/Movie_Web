@@ -1,12 +1,18 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
+// Tắt browser scroll restoration để tự xử lý
+if (typeof window !== 'undefined') {
+    window.history.scrollRestoration = 'manual'
+}
+
 export default function ScrollToTop() {
-    const { pathname } = useLocation()
+    const { pathname, search } = useLocation()
 
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }, [pathname])
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+    }, [pathname, search])
 
     return null
 }
