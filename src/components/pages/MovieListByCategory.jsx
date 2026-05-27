@@ -15,7 +15,7 @@ export default function MovieListByCategory() {
     const year     = searchParams.get('year')     || ''
     const sort     = searchParams.get('sort')     || ''
 
-    const { data } = useGetMoviesBySlugCategoryQuery({ slug, page, limit, country, category, year, sort })
+    const { data, isFetching } = useGetMoviesBySlugCategoryQuery({ slug, page, limit, country, category, year, sort })
     const movies    = data?.items || []
     const title     = data?.breadCrumb?.[0]?.name || ''
     const totalPage = Math.ceil((data?.params?.pagination?.totalItems || 0) / limit)
@@ -28,7 +28,7 @@ export default function MovieListByCategory() {
         <div className='container mx-auto px-4 pt-[80px] md:pt-[90px]'>
             <h2 className='font-semibold text-white text-[22px] sm:text-[28px] py-4'>{title}</h2>
             <FilterBar pageType='danh-sach' />
-            <MovieGrid movies={movies} />
+            <MovieGrid movies={movies} loading={isFetching} />
             <Pagination page={page} totalPage={totalPage} onPrev={handlePrev} onNext={handleNext} />
         </div>
     )
