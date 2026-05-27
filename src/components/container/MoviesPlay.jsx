@@ -40,8 +40,7 @@ export default function MoviesPlay() {
     const [isMini, setIsMini] = useState(false)
     const [miniDismissed, setMiniDismissed] = useState(false)
 
-    // Focus guard — element ẩn để giữ focus trong parent document
-    const focusGuardRef = useRef(null)
+    const iframeRef = useRef(null)
 
     useEffect(() => {
         miniDismissedRef.current = miniDismissed
@@ -99,32 +98,34 @@ export default function MoviesPlay() {
         setServerIdx(0)
     }, [slug])
 
-    // Poll để steal focus từ iframe về focusGuard (cross-origin iframe chặn keyboard events)
-    useEffect(() => {
-        const poll = setInterval(() => {
-            if (document.activeElement?.tagName === 'IFRAME') {
-                focusGuardRef.current?.focus({ preventScroll: true })
-            }
-        }, 300)
-        return () => clearInterval(poll)
-    }, [])
+    const toggleFullscreen = () => {
+        const el = iframeRef.current || playerContainerRef.current
+        if (!el) return
+        if (document.fullscreenElement) {
+            document.exitFullscreen()
+        } else {
+            el.requestFullscreen?.()
+        }
+    }
 
-    // Keyboard shortcuts — hoạt động nhờ focusGuard giữ focus trong parent document
+    // Keyboard shortcuts (n/p chuyển tập, f fullscreen, Esc quay lại)
+    // Arrow ← → không bắt ở đây để iframe player tự xử lý seek
     useEffect(() => {
         const handleKey = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
             const currentName = epParam || activeServerData[0]?.name
             const idx = activeServerData.findIndex(ep => ep.name === currentName)
 
-            if (e.key === 'ArrowRight' || e.key === 'n') {
+            if (e.key === 'n') {
                 const next = activeServerData[idx + 1]
                 if (next) navigate(`/xem-phim/${slug}?ep=${next.name}`)
             }
-            if (e.key === 'ArrowLeft' || e.key === 'p') {
+            if (e.key === 'p') {
                 const prev = activeServerData[idx - 1]
                 if (prev) navigate(`/xem-phim/${slug}?ep=${prev.name}`)
             }
             if (e.key === 'Escape') navigate(`/phim/${slug}`)
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen()
         }
 
         window.addEventListener('keydown', handleKey)
@@ -140,8 +141,6 @@ export default function MoviesPlay() {
 
     return (
         <div className='pt-[60px] md:pt-[120px]'>
-            {/* Focus guard: element ẩn để giữ keyboard focus trong parent khi iframe steal focus */}
-            <div ref={focusGuardRef} tabIndex={-1} className='sr-only' aria-hidden='true' />
 
             {/* ── Video Player Full Width ── */}
             <div ref={playerContainerRef} className='w-full bg-black relative' style={{ aspectRatio: '14/7' }}>
@@ -171,11 +170,12 @@ export default function MoviesPlay() {
                     )}
                     {currentEpisode?.link_embed ? (
                         <iframe
+                            ref={iframeRef}
                             key={currentEpisode.link_embed}
                             src={currentEpisode.link_embed}
                             frameBorder='0'
                             allowFullScreen
-                            allow='autoplay; encrypted-media; picture-in-picture'
+                            allow='autoplay; encrypted-media; picture-in-picture; fullscreen'
                             title={`${movies.name} - Tập ${currentEpisode.name}`}
                             className={showMiniPlayer ? 'w-full aspect-video block' : 'absolute inset-0 w-full h-full'}
                         />
@@ -208,9 +208,11 @@ export default function MoviesPlay() {
                     <div className='flex items-center gap-4 flex-shrink-0'>
                         {/* Keyboard hint */}
                         <span className='hidden lg:flex items-center gap-2 text-gray-600 text-[11px]'>
-                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px]'>←</kbd>
-                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px]'>→</kbd>
+                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px]'>n</kbd>
+                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px]'>p</kbd>
                             chuyển tập
+                            <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px] ml-1'>F</kbd>
+                            toàn màn hình
                             <kbd className='px-1.5 py-0.5 bg-white/5 rounded text-[10px] ml-1'>Esc</kbd>
                             quay lại
                         </span>
