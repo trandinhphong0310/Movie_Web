@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Navigate, Link } from 'react-router-dom'
 import { useGetProfileQuery, useUpdateProfileMutation } from '../../redux/services/authApi'
 import { readHistory } from '../../hooks/useWatchHistory'
 import { useWatchlist } from '../../hooks/useWatchlist'
-import { FaHistory, FaHeart, FaCalendarAlt, FaEdit, FaCheck, FaTimes } from 'react-icons/fa'
+import { FaHistory, FaHeart, FaCalendarAlt, FaEdit, FaCheck, FaTimes, FaCamera } from 'react-icons/fa'
+
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 function formatDate(iso) {
     if (!iso) return '—'
@@ -17,6 +20,7 @@ export default function Profile() {
         window.addEventListener('tokenChange', handler)
         return () => window.removeEventListener('tokenChange', handler)
     }, [])
+
     const { data: profile, isLoading } = useGetProfileQuery(undefined, { skip: !token })
     const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation()
     const { watchlist } = useWatchlist()
@@ -26,6 +30,9 @@ export default function Profile() {
     const [form, setForm] = useState({ fullName: '', email: '', phoneNumber: '', avatar: '' })
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [uploadError, setUploadError] = useState('')
+    const fileInputRef = useRef(null)
 
     if (!token) return <Navigate to='/dang-nhap' replace />
 
@@ -39,23 +46,49 @@ export default function Profile() {
 
     const username = profile?.username || '...'
     const initials = username.slice(0, 2).toUpperCase()
+    const currentAvatar = profile?.avatar
+
+    async function handleAvatarUpload(e) {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) { setUploadError('Chỉ hỗ trợ file ảnh.'); return }
+        if (file.size > 5 * 1024 * 1024) { setUploadError('Ảnh tối đa 5MB.'); return }
+
+        setUploading(true)
+        setUploadError('')
+        try {
+            const data = new FormData()
+            data.append('file', file)
+            data.append('upload_preset', UPLOAD_PRESET)
+
+            const res = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                { method: 'POST', body: data }
+            )
+            if (!res.ok) throw new Error('Upload thất bại')
+            const json = await res.json()
+
+            await updateProfile({ avatar: json.secure_url }).unwrap()
+        } catch {
+            setUploadError('Upload thất bại, thử lại.')
+        } finally {
+            setUploading(false)
+            e.target.value = ''
+        }
+    }
 
     const handleEdit = () => {
         setForm({
             fullName: profile?.fullName || '',
             email: profile?.email || '',
             phoneNumber: profile?.phoneNumber || '',
-            avatar: profile?.avatar || '',
         })
         setEditing(true)
         setError('')
         setSuccess(false)
     }
 
-    const handleCancel = () => {
-        setEditing(false)
-        setError('')
-    }
+    const handleCancel = () => { setEditing(false); setError('') }
 
     const handleSave = async () => {
         try {
@@ -72,16 +105,51 @@ export default function Profile() {
         <div className='min-h-screen bg-[#0a0c14] pt-[90px] pb-16 px-4'>
             <div className='max-w-[480px] mx-auto'>
 
-                {/* Avatar + tên */}
+                {/* Avatar */}
                 <div className='flex flex-col items-center gap-4 mb-8'>
-                    {profile?.avatar ? (
-                        <img src={profile.avatar} alt={username}
-                            className='w-20 h-20 rounded-full object-cover border-2 border-white/10' />
-                    ) : (
-                        <div className='w-20 h-20 rounded-full bg-red-600 flex items-center justify-center text-white text-2xl font-bold select-none'>
-                            {initials}
-                        </div>
-                    )}
+                    <div className='relative group'>
+                        {currentAvatar ? (
+                            <img
+                                src={currentAvatar}
+                                alt={username}
+                                className='w-24 h-24 rounded-full object-cover border-2 border-white/10'
+                            />
+                        ) : (
+                            <div className='w-24 h-24 rounded-full bg-red-600 flex items-center justify-center
+                                text-white text-3xl font-bold select-none'>
+                                {initials}
+                            </div>
+                        )}
+
+                        {/* Upload overlay */}
+                        <button
+                            type='button'
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                            className='absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center
+                                opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-wait'
+                        >
+                            {uploading ? (
+                                <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+                            ) : (
+                                <>
+                                    <FaCamera className='text-white w-5 h-5' />
+                                    <span className='text-white text-[10px] mt-1'>Đổi ảnh</span>
+                                </>
+                            )}
+                        </button>
+
+                        <input
+                            ref={fileInputRef}
+                            type='file'
+                            accept='image/*'
+                            className='hidden'
+                            onChange={handleAvatarUpload}
+                        />
+                    </div>
+
+                    {uploadError && <p className='text-red-400 text-[12px]'>{uploadError}</p>}
+
                     <div className='text-center'>
                         <h1 className='text-white text-2xl font-bold'>{profile?.fullName || username}</h1>
                         {profile?.fullName && <p className='text-gray-500 text-[13px]'>@{username}</p>}
@@ -128,7 +196,6 @@ export default function Profile() {
                                 { key: 'fullName', label: 'Họ tên', placeholder: 'Nhập họ tên' },
                                 { key: 'email', label: 'Email', placeholder: 'Nhập email', type: 'email' },
                                 { key: 'phoneNumber', label: 'Số điện thoại', placeholder: 'Nhập số điện thoại' },
-                                { key: 'avatar', label: 'Avatar URL', placeholder: 'https://...' },
                             ].map(({ key, label, placeholder, type = 'text' }) => (
                                 <div key={key} className='flex flex-col gap-1.5'>
                                     <label className='text-gray-500 text-[12px]'>{label}</label>
