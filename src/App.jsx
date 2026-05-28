@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import ScrollToTop from "./components/shared/ScrollToTop"
 
 import Header from "./components/layouts/Header"
@@ -14,6 +14,8 @@ const MoviesCard         = lazy(() => import("./components/container/MoviesCard"
 const MoviesPlay         = lazy(() => import("./components/container/MoviesPlay"))
 const WatchHistory       = lazy(() => import("./components/pages/WatchHistory"))
 const Watchlist          = lazy(() => import("./components/pages/Watchlist"))
+const LoginRegister      = lazy(() => import("./components/pages/LoginRegister"))
+const Profile            = lazy(() => import("./components/pages/Profile"))
 const NotFound           = lazy(() => import("./components/pages/NotFound"))
 
 function PageLoader() {
@@ -55,6 +57,9 @@ function App() {
               <Route path="/xem-phim/:slug" element={<MoviesPlay />} />
               <Route path="/lich-su" element={<WatchHistory />} />
               <Route path="/yeu-thich" element={<Watchlist />} />
+              <Route path="/ho-so" element={<Profile />} />
+              <Route path="/dang-nhap" element={localStorage.getItem('token') ? <Navigate to="/" replace /> : <LoginRegister />} />
+              <Route path="/dang-ky" element={localStorage.getItem('token') ? <Navigate to="/" replace /> : <LoginRegister />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

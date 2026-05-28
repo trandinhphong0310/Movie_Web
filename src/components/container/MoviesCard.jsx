@@ -9,6 +9,7 @@ import ActorList from '../shared/ActorList'
 import EpisodeList from '../shared/EpisodeList'
 import TrailerModal from '../shared/TrailerModal'
 import { SkeletonMovieDetail } from '../shared/SkeletonCard'
+import MovieComment from './movieComment'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -227,6 +228,11 @@ export default function MoviesCard() {
                     </div>
                 </div>
 
+            </div>
+
+            {/* Comment section */}
+            <div className='mt-6 bg-[rgba(25,27,36,0.4)] rounded-2xl p-5 md:p-6 border border-white/5'>
+                <MovieComment slug={slug} />
             </div>
         </div>
     )

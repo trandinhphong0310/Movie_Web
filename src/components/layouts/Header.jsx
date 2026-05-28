@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { FaSearch, FaChevronDown, FaBars, FaTimes, FaMicrophone, FaHeart, FaHistory } from 'react-icons/fa'
+import { FaSearch, FaChevronDown, FaBars, FaUser, FaTimes, FaMicrophone, FaHeart, FaHistory } from 'react-icons/fa'
 import { useGetMoviesGenreQuery, useGetMoviesCountryQuery, useSearchMoviesByKeyWordsQuery } from '../../redux/services/movieApi'
+import { useGetProfileQuery } from '../../redux/services/authApi'
 import { Link, useNavigate } from 'react-router-dom'
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -43,6 +44,35 @@ export default function Header() {
   const navigate = useNavigate()
   const base_url = import.meta.env.VITE_BASE_IMG_URL
   const searchRef = useRef(null)
+
+  const [token, setToken] = useState(() => localStorage.getItem('token'))
+
+  useEffect(() => {
+    const handler = () => setToken(localStorage.getItem('token'))
+    window.addEventListener('tokenChange', handler)
+    return () => window.removeEventListener('tokenChange', handler)
+  }, [])
+  const [userOpen, setUserOpen] = useState(false)
+  const userRef = useRef(null)
+
+  const { data: profile } = useGetProfileQuery(undefined, { skip: !token })
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setToken(null)
+    setUserOpen(false)
+    setMenuOpen(false)
+    window.dispatchEvent(new Event('tokenChange'))
+    navigate('/')
+  }
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const { data: searchData } = useSearchMoviesByKeyWordsQuery(keywords, { skip: !keywords.trim() })
 
@@ -225,6 +255,35 @@ export default function Header() {
             </ul>
           )}
         </form>
+
+        {/* User */}
+        {token ? (
+          <div className='relative pl-2' ref={userRef}>
+            <button onClick={() => setUserOpen(v => !v)}
+              className='text-white hover:text-red-400 transition'>
+              <FaUser className='w-4 h-4' />
+            </button>
+            {userOpen && (
+              <div className='absolute right-0 top-[calc(100%+10px)] w-44 bg-[#0f111a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]'>
+                <Link to='/ho-so' onClick={() => setUserOpen(false)}
+                  className='px-4 py-3 border-b border-white/10 hover:bg-white/5 transition block'>
+                  <p className='text-white text-[13px] font-medium truncate'>{profile?.username || profile?.data?.username || 'Tài khoản'}</p>
+                  <p className='text-gray-500 text-[11px] mt-0.5'>Xem hồ sơ</p>
+                </Link>
+                <button onClick={handleLogout}
+                  className='w-full text-left px-4 py-3 text-red-400 hover:bg-white/5 text-[13px] transition'>
+                  Đăng xuất
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link to="/dang-nhap" title="Đăng nhập"
+            className='text-red-700 hover:text-white transition pl-2'>
+            <FaUser className='w-4 h-4' />
+          </Link>
+        )}
+
       </div>
 
       {/* Mobile: search icon + hamburger */}
@@ -320,7 +379,7 @@ export default function Header() {
 
       {/* Mobile Menu Drawer */}
       {menuOpen && (
-        <nav className='absolute top-full left-0 w-full bg-[#0f111a] md:hidden z-40 shadow-xl'>
+        <nav className='absolute top-full left-0 w-full bg-[#0f111a] md:hidden z-[60] shadow-xl overflow-y-auto max-h-[calc(100dvh-60px)]'>
           <ul className='flex flex-col divide-y divide-white/10'>
             <li className='px-6 py-4 text-white text-[15px]'>
               <Link to="/" onClick={closeAll}>Trang chủ</Link>
@@ -375,6 +434,32 @@ export default function Header() {
                 <FaHistory /> Lịch sử xem
               </Link>
             </li>
+            {token ? (
+              <li className='px-6 py-4'>
+                <Link to='/ho-so' onClick={closeAll} className='flex items-center gap-3 mb-3'>
+                  <div className='w-9 h-9 rounded-full bg-red-600/30 border border-red-500/30 flex items-center justify-center
+                    text-red-300 font-bold text-[13px] flex-shrink-0 select-none'>
+                    {(profile?.username || profile?.data?.username || 'T')[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className='text-white text-[14px] font-medium'>{profile?.username || profile?.data?.username || 'Tài khoản'}</p>
+                    <p className='text-gray-500 text-[11px]'>Xem hồ sơ</p>
+                  </div>
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setMenuOpen(false) }}
+                  className='text-red-400 text-[14px] hover:text-red-300 transition'
+                >
+                  Đăng xuất
+                </button>
+              </li>
+            ) : (
+              <li className='px-6 py-4 text-white text-[15px]'>
+                <Link to="/dang-nhap" onClick={closeAll} className='flex items-center gap-2'>
+                  <FaUser /> Đăng nhập
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       )}
