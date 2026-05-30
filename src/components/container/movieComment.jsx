@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FaStar, FaEdit, FaTrash } from 'react-icons/fa'
+import { FaStar, FaEdit, FaTrash, FaReply } from 'react-icons/fa'
 import {
   useGetCommentsQuery,
   useCreateCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
+  useReplyToCommentMutation,
 } from '../../redux/services/commentApi'
 import { useGetProfileQuery } from '../../redux/services/authApi'
 
@@ -45,10 +46,131 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('vi-VN')
 }
 
-function CommentCard({ comment, currentUserId, slug, profile }) {
+function ReplyCard({ reply, currentUserId, slug, profile }) {
+  const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation()
+
+  const ownerId = reply.userId?._id ?? reply.userId
+  const isOwner = !!(currentUserId && ownerId && String(ownerId) === String(currentUserId))
+  const displayName =
+    reply.guestName ||
+    reply.userId?.username ||
+    reply.userId?.fullName ||
+    (isOwner ? (profile?.fullName || profile?.username) : null) ||
+    'Ẩn danh'
+
+  async function handleDelete() {
+    if (!window.confirm('Xóa trả lời này?')) return
+    deleteComment({ id: reply._id, slug })
+  }
+
+  return (
+    <div className='flex gap-2.5'>
+      <div className='w-7 h-7 rounded-full bg-red-600/25 border border-red-500/25 flex items-center justify-center
+        text-red-300 font-bold text-[11px] flex-shrink-0 select-none mt-0.5'>
+        {displayName[0].toUpperCase()}
+      </div>
+      <div className='flex-1 min-w-0'>
+        <div className='flex items-center justify-between gap-2'>
+          <div className='flex items-center gap-2 min-w-0'>
+            <span className='text-gray-200 text-[12px] font-medium truncate'>{displayName}</span>
+            <span className='text-gray-600 text-[11px] flex-shrink-0'>{timeAgo(reply.createdAt)}</span>
+          </div>
+          {isOwner && (
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className='p-1 text-gray-600 hover:text-red-400 transition rounded flex-shrink-0 disabled:opacity-40'
+              title='Xóa'
+            >
+              <FaTrash size={10} />
+            </button>
+          )}
+        </div>
+        <p className='text-gray-400 text-[12px] leading-relaxed mt-0.5 whitespace-pre-wrap'>
+          {reply.content}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function ReplyForm({ commentId, slug, isLoggedIn, displayUsername, onCancel }) {
+  const [content, setContent] = useState('')
+  const [guestName, setGuestName] = useState('')
+  const [error, setError] = useState('')
+  const [replyToComment, { isLoading }] = useReplyToCommentMutation()
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    if (!content.trim()) { setError('Vui lòng nhập nội dung.'); return }
+    if (!isLoggedIn && !guestName.trim()) { setError('Vui lòng nhập tên của bạn.'); return }
+
+    const body = { slug, content: content.trim() }
+    if (!isLoggedIn) body.guestName = guestName.trim()
+
+    try {
+      await replyToComment({ id: commentId, ...body }).unwrap()
+      setContent('')
+      setGuestName('')
+      onCancel()
+    } catch (err) {
+      setError(err?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại.')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className='mt-3 pl-9'>
+      {isLoggedIn ? (
+        <p className='text-gray-600 text-[11px] mb-2'>
+          Trả lời với tên: <span className='text-gray-400'>{displayUsername}</span>
+        </p>
+      ) : (
+        <input
+          value={guestName}
+          onChange={(e) => setGuestName(e.target.value)}
+          placeholder='Tên của bạn *'
+          className='w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-[12px]
+            mb-2 focus:outline-none focus:border-red-500 transition placeholder-gray-600'
+        />
+      )}
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder='Viết trả lời...'
+        rows={2}
+        autoFocus
+        className='w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-[12px]
+          resize-none focus:outline-none focus:border-red-500 transition placeholder-gray-600'
+      />
+      {error && <p className='text-red-400 text-[11px] mt-1'>{error}</p>}
+      <div className='flex gap-2 mt-2'>
+        <button
+          type='submit'
+          disabled={isLoading || !content.trim()}
+          className='px-4 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg
+            text-[12px] font-medium transition'
+        >
+          {isLoading ? 'Đang gửi...' : 'Gửi'}
+        </button>
+        <button
+          type='button'
+          onClick={onCancel}
+          className='px-4 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 rounded-lg text-[12px] transition'
+        >
+          Hủy
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function CommentCard({ comment, currentUserId, slug, profile, isLoggedIn, displayUsername }) {
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState(comment.content)
   const [editRating, setEditRating] = useState(comment.rating)
+  const [replyOpen, setReplyOpen] = useState(false)
+  const [showReplies, setShowReplies] = useState(true)
 
   const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation()
   const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation()
@@ -62,6 +184,7 @@ function CommentCard({ comment, currentUserId, slug, profile }) {
     (isOwner ? (profile?.fullName || profile?.username) : null) ||
     'Ẩn danh'
   const initial = displayName[0].toUpperCase()
+  const replies = comment.replies || []
 
   async function handleUpdate() {
     if (!editContent.trim()) return
@@ -82,6 +205,7 @@ function CommentCard({ comment, currentUserId, slug, profile }) {
 
   return (
     <div className='bg-white/[0.03] border border-white/5 rounded-xl p-4'>
+      {/* Header */}
       <div className='flex items-start justify-between gap-3 mb-3'>
         <div className='flex items-center gap-3 min-w-0'>
           <div className='w-9 h-9 rounded-full bg-red-600/25 border border-red-500/25 flex items-center justify-center
@@ -123,6 +247,7 @@ function CommentCard({ comment, currentUserId, slug, profile }) {
         </div>
       </div>
 
+      {/* Body */}
       {editing ? (
         <>
           <textarea
@@ -151,6 +276,53 @@ function CommentCard({ comment, currentUserId, slug, profile }) {
         </>
       ) : (
         <p className='text-gray-400 text-[13px] leading-relaxed whitespace-pre-wrap'>{comment.content}</p>
+      )}
+
+      {/* Footer actions */}
+      {!editing && (
+        <div className='flex items-center gap-3 mt-3 pt-2 border-t border-white/5'>
+          <button
+            onClick={() => { setReplyOpen(v => !v) }}
+            className='flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-red-400 transition'
+          >
+            <FaReply size={10} />
+            Trả lời
+          </button>
+          {replies.length > 0 && (
+            <button
+              onClick={() => setShowReplies(v => !v)}
+              className='text-[12px] text-gray-500 hover:text-gray-300 transition'
+            >
+              {showReplies ? `Ẩn ${replies.length} trả lời` : `Xem ${replies.length} trả lời`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Reply form */}
+      {replyOpen && (
+        <ReplyForm
+          commentId={comment._id}
+          slug={slug}
+          isLoggedIn={isLoggedIn}
+          displayUsername={displayUsername}
+          onCancel={() => setReplyOpen(false)}
+        />
+      )}
+
+      {/* Replies list */}
+      {showReplies && replies.length > 0 && (
+        <div className='mt-3 pt-3 border-t border-white/5 flex flex-col gap-3 pl-3 border-l-2 border-l-white/5'>
+          {replies.map(reply => (
+            <ReplyCard
+              key={reply._id}
+              reply={reply}
+              currentUserId={currentUserId}
+              slug={slug}
+              profile={profile}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -191,6 +363,7 @@ export default function MovieComment({ slug }) {
   }
 
   const sorted = [...comments].reverse()
+  const totalReplies = comments.reduce((acc, c) => acc + (c.replies?.length || 0), 0)
 
   return (
     <div>
@@ -198,7 +371,7 @@ export default function MovieComment({ slug }) {
         <h3 className='text-white font-semibold text-[16px]'>Bình luận</h3>
         {comments.length > 0 && (
           <span className='px-2 py-0.5 bg-red-600/20 text-red-400 text-[12px] rounded-full border border-red-500/20'>
-            {comments.length}
+            {comments.length + totalReplies}
           </span>
         )}
       </div>
@@ -272,6 +445,8 @@ export default function MovieComment({ slug }) {
               currentUserId={currentUserId}
               slug={slug}
               profile={profile}
+              isLoggedIn={isLoggedIn}
+              displayUsername={displayUsername}
             />
           ))}
         </div>

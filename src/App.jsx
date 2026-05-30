@@ -39,6 +39,10 @@ function PageLoader() {
   )
 }
 
+function PublicRoute({ children }) {
+  return localStorage.getItem('token') ? <Navigate to="/" replace /> : children
+}
+
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -58,8 +62,8 @@ function App() {
               <Route path="/lich-su" element={<WatchHistory />} />
               <Route path="/yeu-thich" element={<Watchlist />} />
               <Route path="/ho-so" element={<Profile />} />
-              <Route path="/dang-nhap" element={localStorage.getItem('token') ? <Navigate to="/" replace /> : <LoginRegister />} />
-              <Route path="/dang-ky" element={localStorage.getItem('token') ? <Navigate to="/" replace /> : <LoginRegister />} />
+              <Route path="/dang-nhap" element={<PublicRoute><LoginRegister /></PublicRoute>} />
+              <Route path="/dang-ky" element={<PublicRoute><LoginRegister /></PublicRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

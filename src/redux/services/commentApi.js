@@ -32,6 +32,14 @@ export const commentApi = createApi({
       query: ({ id }) => ({ url: `/comments/${id}`, method: 'DELETE' }),
       invalidatesTags: (result, error, { slug }) => [{ type: 'Comments', id: slug }],
     }),
+    replyToComment: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/comments/${id}/replies`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, error, { slug }) => [{ type: 'Comments', id: slug }],
+    }),
   }),
 })
 
@@ -40,4 +48,5 @@ export const {
   useCreateCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
+  useReplyToCommentMutation,
 } = commentApi

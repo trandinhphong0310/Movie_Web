@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FaPlay, FaTrash, FaClock } from 'react-icons/fa'
-import { readHistory, removeFromHistory, clearHistory } from '../../hooks/useWatchHistory'
+import { readHistory } from '../../hooks/useWatchHistory'
+import { useWatchHistory } from '../../hooks/useWatchHistory'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -18,6 +19,7 @@ function timeAgo(ts) {
 
 export default function WatchHistory() {
     const [history, setHistory] = useState(readHistory)
+    const { removeHistory, clearAll } = useWatchHistory()
 
     useEffect(() => {
         const sync = () => setHistory(readHistory())
@@ -26,14 +28,12 @@ export default function WatchHistory() {
     }, [])
 
     function handleRemove(slug) {
-        removeFromHistory(slug)
-        setHistory(readHistory())
+        removeHistory(slug)
     }
 
     function handleClear() {
         if (window.confirm('Xóa toàn bộ lịch sử xem?')) {
-            clearHistory()
-            setHistory([])
+            clearAll()
         }
     }
 

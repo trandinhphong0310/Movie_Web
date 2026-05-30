@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useMovieDetail } from '../../hooks/useMovieDetail'
-import { saveToHistory } from '../../hooks/useWatchHistory'
+import { useWatchHistory } from '../../hooks/useWatchHistory'
 import ActorList from '../shared/ActorList'
 import EpisodeList from '../shared/EpisodeList'
 import { SkeletonPlayer } from '../shared/SkeletonCard'
@@ -27,6 +27,7 @@ export default function MoviesPlay() {
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
     const { movies, category, episodes, servers, imdb, tmdb, director, peoples, loading } = useMovieDetail(slug)
+    const { saveHistory } = useWatchHistory()
 
     const [serverIdx, setServerIdx] = useState(0)
     const activeServerData = servers[serverIdx]?.server_data || episodes
@@ -70,7 +71,7 @@ export default function MoviesPlay() {
     // Lưu lịch sử xem khi bắt đầu xem tập
     useEffect(() => {
         if (!movies || !currentEpisode) return
-        saveToHistory({
+        saveHistory({
             slug,
             name: movies.name,
             origin_name: movies.origin_name,

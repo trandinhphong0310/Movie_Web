@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FaPlay, FaTimes } from 'react-icons/fa'
-import { readHistory, removeFromHistory } from '../../hooks/useWatchHistory'
+import { readHistory, useWatchHistory } from '../../hooks/useWatchHistory'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
 export default function ContinueWatching() {
     const [history, setHistory] = useState(() => readHistory())
+    const { removeHistory } = useWatchHistory()
 
     useEffect(() => {
         const sync = () => setHistory(readHistory())
@@ -21,7 +22,7 @@ export default function ContinueWatching() {
     function handleRemove(e, slug) {
         e.preventDefault()
         e.stopPropagation()
-        removeFromHistory(slug)
+        removeHistory(slug)
     }
 
     return (
