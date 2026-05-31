@@ -1,6 +1,9 @@
-import { Link } from 'react-router-dom'
-import { FaHeart, FaRegHeart } from 'react-icons/fa'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { FaHeart, FaRegHeart, FaPlay } from 'react-icons/fa'
 import { useWatchlist } from '../../hooks/useWatchlist'
+import { useGetMoviesDetailQuery } from '../../redux/services/movieApi'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -17,12 +20,131 @@ function LangBadge({ lang, className = '' }) {
     return <span className={`movies-card_lang ${config.cls} ${className}`}>{config.label}</span>
 }
 
+function getYouTubeId(url) {
+    if (!url) return null
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+    return match?.[1] || null
+}
+
+const POPUP_WIDTH = 280
+
+function HoverPreview({ item, visible, anchorRef, popupHoveredRef, onClose }) {
+    const navigate = useNavigate()
+    const { data } = useGetMoviesDetailQuery(item.slug, { skip: !visible })
+    const videoId = getYouTubeId(data?.item?.trailer_url)
+    const [style, setStyle] = useState(null)
+
+    useLayoutEffect(() => {
+        if (!visible || !anchorRef.current) { setStyle(null); return }
+        const rect = anchorRef.current.getBoundingClientRect()
+        const spaceBelow = window.innerHeight - rect.bottom
+        const showAbove = spaceBelow < 260
+
+        let left = rect.left + rect.width / 2 - POPUP_WIDTH / 2
+        left = Math.max(8, Math.min(left, window.innerWidth - POPUP_WIDTH - 8))
+
+        setStyle({
+            position: 'fixed',
+            width: POPUP_WIDTH,
+            left,
+            ...(showAbove
+                ? { bottom: window.innerHeight - rect.top + 6 }
+                : { top: rect.bottom + 6 }),
+            zIndex: 9999,
+        })
+    }, [visible, anchorRef])
+
+    if (!visible || !style) return null
+
+    return createPortal(
+        <div
+            style={style}
+            className='bg-[#141824] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fadeIn'
+            onMouseEnter={() => { popupHoveredRef.current = true }}
+            onMouseLeave={() => { popupHoveredRef.current = false; onClose() }}
+        >
+            {/* Video hoặc poster */}
+            <div className='aspect-video bg-black relative'>
+                {videoId ? (
+                    <iframe
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&modestbranding=1&rel=0`}
+                        className='w-full h-full'
+                        allow='autoplay; encrypted-media'
+                        title={item.name}
+                    />
+                ) : (
+                    <>
+                        <img
+                            src={`${base_url}/${item.thumb_url}`}
+                            alt={item.name}
+                            className='w-full h-full object-cover'
+                        />
+                        <div className='absolute inset-0 flex items-center justify-center bg-black/20'>
+                            <div className='w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center'>
+                                <FaPlay className='text-white text-[14px] ml-0.5' />
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Info */}
+            <div className='p-3'>
+                <p className='text-white font-semibold text-[13px] line-clamp-1 mb-2'>{item.name}</p>
+                <div className='flex items-center gap-1 flex-wrap mb-2.5'>
+                    {item.year && (
+                        <span className='text-[11px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300'>
+                            {item.year}
+                        </span>
+                    )}
+                    {item.quality && (
+                        <span className='text-[11px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20'>
+                            {item.quality}
+                        </span>
+                    )}
+                    {item.episode_current && (
+                        <span className='text-[11px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300'>
+                            {item.episode_current}
+                        </span>
+                    )}
+                    {item.lang && (
+                        <span className='text-[11px] px-1.5 py-0.5 rounded bg-emerald-800/50 text-emerald-300'>
+                            {item.lang === 'Vietsub + Thuyết minh' ? 'Vsub+TM' : item.lang}
+                        </span>
+                    )}
+                </div>
+                <button
+                    onClick={() => navigate(`/xem-phim/${item.slug}`)}
+                    className='flex items-center justify-center gap-1.5 w-full py-2 bg-red-600 hover:bg-red-700
+                        text-white text-[12px] font-medium rounded-lg transition'
+                >
+                    <FaPlay size={9} /> Xem ngay
+                </button>
+            </div>
+        </div>,
+        document.body
+    )
+}
+
 export default function MovieItemCard({ item, layout = 'grid' }) {
+    const { toggle, isIn } = useWatchlist()
+    const [hovered, setHovered] = useState(false)
+    const timerRef = useRef(null)
+    const anchorRef = useRef(null)
+    const popupHoveredRef = useRef(false)
+
+    useEffect(() => () => clearTimeout(timerRef.current), [])
+
+    useEffect(() => {
+        if (!hovered) return
+        const close = () => { popupHoveredRef.current = false; setHovered(false) }
+        window.addEventListener('scroll', close, { passive: true })
+        return () => window.removeEventListener('scroll', close)
+    }, [hovered])
+
     if (!item) return null
 
-    const { toggle, isIn } = useWatchlist()
     const inWatchlist = isIn(item.slug)
-
     const movieData = {
         slug: item.slug,
         name: item.name,
@@ -34,6 +156,19 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
         episode_current: item.episode_current,
     }
 
+    function handleMouseEnter() {
+        clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => setHovered(true), 400)
+    }
+
+    function handleMouseLeave() {
+        clearTimeout(timerRef.current)
+        // Delay để check xem mouse có di sang popup không
+        timerRef.current = setTimeout(() => {
+            if (!popupHoveredRef.current) setHovered(false)
+        }, 80)
+    }
+
     function handleHeart(e) {
         e.preventDefault()
         e.stopPropagation()
@@ -42,7 +177,12 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
 
     if (layout === 'section') {
         return (
-            <div className='movies-card_item'>
+            <div
+                ref={anchorRef}
+                className='movies-card_item'
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
                 <Link to={`/phim/${item.slug}`}>
                     <div className='relative group'>
                         <img src={`${base_url}/${item.thumb_url}`} alt={item.name}
@@ -52,7 +192,6 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
                             <LangBadge lang={item.lang} className='max-w-[60%] truncate' />
                             <span className='movies-card_episode whitespace-nowrap flex-shrink-0'>{item.episode_current}</span>
                         </div>
-                        {/* Heart button */}
                         <button
                             onClick={handleHeart}
                             className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center
@@ -62,16 +201,23 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
                             {inWatchlist ? <FaHeart size={11} /> : <FaRegHeart size={11} />}
                         </button>
                     </div>
-                    <h3 className='movies-card_name mt-2 text-[15px]'>{item.name}</h3>
-                    <h4 className='text-[12px] text-[#aaaaaa] line-clamp-1'>{item.origin_name}</h4>
+                    <h3 className={`movies-card_name mt-2 text-[15px] transition-opacity duration-150 ${hovered ? 'opacity-0' : ''}`}>{item.name}</h3>
+                    <h4 className={`text-[12px] text-[#aaaaaa] line-clamp-1 transition-opacity duration-150 ${hovered ? 'opacity-0' : ''}`}>{item.origin_name}</h4>
                 </Link>
+
+                <HoverPreview item={item} visible={hovered} anchorRef={anchorRef} popupHoveredRef={popupHoveredRef} onClose={() => setHovered(false)} />
             </div>
         )
     }
 
-    // default "grid" layout
+    // grid layout
     return (
-        <div className='mt-4 cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out'>
+        <div
+            ref={anchorRef}
+            className='mt-4 cursor-pointer hover:scale-105 transform transition duration-300 ease-in-out'
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
             <Link to={`/phim/${item.slug}`}>
                 <div className='relative group'>
                     <img
@@ -81,7 +227,6 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
                         src={`${base_url}/${item.thumb_url}`}
                         alt={item.name}
                     />
-                    {/* Heart button */}
                     <button
                         onClick={handleHeart}
                         className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center
@@ -102,6 +247,8 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
                     </div>
                 </div>
             </Link>
+
+            <HoverPreview item={item} visible={hovered} anchorRef={anchorRef} popupHoveredRef={popupHoveredRef} onClose={() => setHovered(false)} />
         </div>
     )
 }
