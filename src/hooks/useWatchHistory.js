@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import {
+  useGetHistoryQuery,
   useAddHistoryMutation,
   useRemoveHistoryMutation,
   useClearHistoryMutation,
@@ -13,14 +14,13 @@ function read() {
   catch { return [] }
 }
 
-// Pure functions — still usable outside React components
+// Pure functions — usable outside React components
 export function readHistory() { return read() }
 
 export function getMovieEntry(slug) {
   return read().find(h => h.slug === slug) || null
 }
 
-// React hook — syncs localStorage with API when logged in
 export function useWatchHistory() {
   const [token, setToken] = useState(() => localStorage.getItem('token'))
 
@@ -30,18 +30,35 @@ export function useWatchHistory() {
     return () => window.removeEventListener('tokenChange', handler)
   }, [])
 
+  const { data: apiHistory, isLoading } = useGetHistoryQuery(undefined, { skip: !token })
   const [addHistoryApi] = useAddHistoryMutation()
   const [removeHistoryApi] = useRemoveHistoryMutation()
   const [clearHistoryApi] = useClearHistoryMutation()
 
+  const [localHistory, setLocalHistory] = useState(read)
+  useEffect(() => {
+    const sync = () => setLocalHistory(read())
+    window.addEventListener('history_updated', sync)
+    return () => window.removeEventListener('history_updated', sync)
+  }, [])
+
+  // When logged in: API is primary source; when not: localStorage
+  const history = token ? (apiHistory || []) : localHistory
+
   const saveHistory = useCallback((entry) => {
+    // Always save full data to localStorage (for getMovieEntry lookups)
     const prev = read()
     const filtered = prev.filter(h => h.slug !== entry.slug)
     const next = [entry, ...filtered].slice(0, MAX)
     localStorage.setItem(KEY, JSON.stringify(next))
     window.dispatchEvent(new Event('history_updated'))
+
     if (token) {
-      addHistoryApi(entry.slug).catch(() => {})
+      addHistoryApi({
+        slug: entry.slug,
+        epName: entry.epName,
+        watchedAt: entry.watchedAt,
+      }).catch(() => {})
     }
   }, [token, addHistoryApi])
 
@@ -62,5 +79,5 @@ export function useWatchHistory() {
     }
   }, [token, clearHistoryApi])
 
-  return { saveHistory, removeHistory, clearAll }
+  return { history, saveHistory, removeHistory, clearAll, isLoading: token ? isLoading : false }
 }

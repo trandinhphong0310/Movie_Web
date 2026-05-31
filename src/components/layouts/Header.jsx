@@ -55,7 +55,7 @@ export default function Header() {
   const [userOpen, setUserOpen] = useState(false)
   const userRef = useRef(null)
 
-  const { data: profile } = useGetProfileQuery(undefined, { skip: !token })
+  const { data: profile, isLoading: profileLoading } = useGetProfileQuery(undefined, { skip: !token })
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -260,14 +260,24 @@ export default function Header() {
         {token ? (
           <div className='relative pl-2' ref={userRef}>
             <button onClick={() => setUserOpen(v => !v)}
-              className='text-white hover:text-red-400 transition'>
-              <FaUser className='w-4 h-4' />
+              className='transition flex items-center justify-center'>
+              {profileLoading || !profile?.username
+                ? <FaUser className='w-4 h-4 text-white hover:text-red-400 transition' />
+                : (
+                  <div className='w-7 h-7 rounded-full bg-red-600/30 border border-red-500/40 flex items-center justify-center
+                    text-red-300 font-bold text-[12px] select-none hover:border-red-400 transition'>
+                    {profile.username[0].toUpperCase()}
+                  </div>
+                )
+              }
             </button>
             {userOpen && (
               <div className='absolute right-0 top-[calc(100%+10px)] w-44 bg-[#0f111a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]'>
                 <Link to='/ho-so' onClick={() => setUserOpen(false)}
                   className='px-4 py-3 border-b border-white/10 hover:bg-white/5 transition block'>
-                  <p className='text-white text-[13px] font-medium truncate'>{profile?.username || profile?.data?.username || 'Tài khoản'}</p>
+                  <p className='text-white text-[13px] font-medium truncate'>
+                    {profileLoading ? '...' : (profile?.username || 'Tài khoản')}
+                  </p>
                   <p className='text-gray-500 text-[11px] mt-0.5'>Xem hồ sơ</p>
                 </Link>
                 <button onClick={handleLogout}
