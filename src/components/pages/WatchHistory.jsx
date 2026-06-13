@@ -48,7 +48,7 @@ function HistoryCard({ item, onRemove }) {
         </div>
     )
 
-    const epLink = movie.epName ? `/xem-phim/${movie.slug}?ep=${movie.epName}` : `/xem-phim/${movie.slug}`
+    const epLink = movie.epName ? `/xem-phim/${movie.slug}?ep=${encodeURIComponent(movie.epName)}` : `/xem-phim/${movie.slug}`
 
     return (
         <div className='group relative'>

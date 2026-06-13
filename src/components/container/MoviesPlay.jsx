@@ -6,6 +6,7 @@ import ActorList from '../shared/ActorList'
 import EpisodeList from '../shared/EpisodeList'
 import { SkeletonPlayer } from '../shared/SkeletonCard'
 import { FaStar, FaArrowLeft, FaClock, FaFilm, FaTimes, FaExpand } from 'react-icons/fa'
+import NotFound from '../pages/NotFound'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -26,7 +27,7 @@ export default function MoviesPlay() {
     const { slug } = useParams()
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
-    const { movies, category, episodes, servers, imdb, tmdb, director, peoples, loading } = useMovieDetail(slug)
+    const { movies, category, episodes, servers, imdb, tmdb, director, peoples, loading, adultBlocked } = useMovieDetail(slug)
     const { saveHistory } = useWatchHistory()
 
     const [serverIdx, setServerIdx] = useState(0)
@@ -79,7 +80,7 @@ export default function MoviesPlay() {
             epName: currentEpisode.name,
             watchedAt: Date.now(),
         })
-    }, [slug, movies, currentEpisode])
+    }, [slug, movies, currentEpisode, saveHistory])
 
     // Dynamic page title
     useEffect(() => {
@@ -119,11 +120,11 @@ export default function MoviesPlay() {
 
             if (e.key === 'n') {
                 const next = activeServerData[idx + 1]
-                if (next) navigate(`/xem-phim/${slug}?ep=${next.name}`)
+                if (next) navigate(`/xem-phim/${slug}?ep=${encodeURIComponent(next.name)}`)
             }
             if (e.key === 'p') {
                 const prev = activeServerData[idx - 1]
-                if (prev) navigate(`/xem-phim/${slug}?ep=${prev.name}`)
+                if (prev) navigate(`/xem-phim/${slug}?ep=${encodeURIComponent(prev.name)}`)
             }
             if (e.key === 'Escape') navigate(`/phim/${slug}`)
             if (e.key === 'f' || e.key === 'F') toggleFullscreen()
@@ -134,6 +135,7 @@ export default function MoviesPlay() {
     }, [slug, epParam, activeServerData, navigate])
 
     if (loading || !movies) return <SkeletonPlayer />
+    if (adultBlocked) return <NotFound />
     if (!currentEpisode) return <div className='text-white text-center py-20'>Không tìm thấy tập phim.</div>
 
     const rating = imdb?.vote_average || tmdb?.vote_average || null
@@ -154,7 +156,7 @@ export default function MoviesPlay() {
                     {showMiniPlayer && (
                         <div className='absolute top-2 right-2 z-10 flex gap-1.5'>
                             <button
-                                onClick={() => navigate(`/xem-phim/${slug}?ep=${currentEpisode.name}`)}
+                                onClick={() => navigate(`/xem-phim/${slug}?ep=${encodeURIComponent(currentEpisode.name)}`)}
                                 className='w-7 h-7 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-white/20 transition'
                                 title='Mở rộng'
                             >

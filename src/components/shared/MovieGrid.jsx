@@ -1,5 +1,6 @@
 import MovieItemCard from './MovieItemCard'
 import { SkeletonCard } from './SkeletonCard'
+import { filterNonAdultMovies } from '../../utils/adultFilter'
 
 const GRID_CLASS = 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
 
@@ -14,7 +15,8 @@ export default function MovieGrid({ movies = [], filter, loading = false }) {
         )
     }
 
-    const displayMovies = filter ? movies.filter(filter) : movies
+    const safeMovies = filterNonAdultMovies(movies)
+    const displayMovies = filter ? safeMovies.filter(filter) : safeMovies
 
     if (!displayMovies.length) {
         return (

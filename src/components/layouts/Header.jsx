@@ -1,16 +1,22 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { FaSearch, FaChevronDown, FaBars, FaUser, FaTimes, FaMicrophone, FaHeart, FaHistory } from 'react-icons/fa'
 import { useGetMoviesGenreQuery, useGetMoviesCountryQuery, useSearchMoviesByKeyWordsQuery } from '../../redux/services/movieApi'
-import { useGetProfileQuery } from '../../redux/services/authApi'
+import { useGetProfileQuery, useLogoutMutation } from '../../redux/services/authApi'
 import { Link, useNavigate } from 'react-router-dom'
+import { filterNonAdultMovies } from '../../utils/adultFilter'
+import { clearAuthTokens, getRefreshToken, notifyAuthChanged } from '../../utils/authTokens'
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+function getSpeechRecognition() {
+  if (typeof window === 'undefined') return null
+  return window.SpeechRecognition || window.webkitSpeechRecognition
+}
 
 function useVoiceSearch(onResult) {
   const [listening, setListening] = useState(false)
   const recogRef = useRef(null)
 
   const start = useCallback(() => {
+    const SpeechRecognition = getSpeechRecognition()
     if (!SpeechRecognition) return
     const rec = new SpeechRecognition()
     rec.lang = 'vi-VN'
@@ -28,7 +34,7 @@ function useVoiceSearch(onResult) {
     setListening(false)
   }, [])
 
-  return { listening, start, stop, supported: !!SpeechRecognition }
+  return { listening, start, stop, supported: !!getSpeechRecognition() }
 }
 
 export default function Header() {
@@ -44,6 +50,7 @@ export default function Header() {
   const navigate = useNavigate()
   const base_url = import.meta.env.VITE_BASE_IMG_URL
   const searchRef = useRef(null)
+  const [logout] = useLogoutMutation()
 
   const [token, setToken] = useState(() => localStorage.getItem('token'))
 
@@ -57,12 +64,20 @@ export default function Header() {
 
   const { data: profile, isLoading: profileLoading } = useGetProfileQuery(undefined, { skip: !token })
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
+  const handleLogout = async () => {
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      try {
+        await logout(refreshToken).unwrap()
+      } catch (error) {
+        console.error('Logout request failed:', error)
+      }
+    }
+    clearAuthTokens()
     setToken(null)
     setUserOpen(false)
     setMenuOpen(false)
-    window.dispatchEvent(new Event('tokenChange'))
+    notifyAuthChanged()
     navigate('/')
   }
 
@@ -84,7 +99,7 @@ export default function Header() {
     if (!keywords.trim()) {
       setSearchMovies([])
     } else if (searchData?.items) {
-      setSearchMovies(searchData.items)
+      setSearchMovies(filterNonAdultMovies(searchData.items))
     }
   }, [searchData, keywords])
 
@@ -107,7 +122,7 @@ export default function Header() {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (keywords.trim()) {
-      navigate(`/tim-kiem?keyword=${keywords}`)
+      navigate(`/tim-kiem?keyword=${encodeURIComponent(keywords)}`)
       setSearchMovies([])
       setKeywords('')
       setMenuOpen(false)
@@ -403,11 +418,13 @@ export default function Header() {
               </button>
               {genreOpen && (
                 <ul className='mt-3 grid grid-cols-3 gap-2'>
-                  {genre.map(item => (
-                    <li key={item._id} className='text-gray-300 text-[13px] py-1 hover:text-red-400'>
-                      <Link to={`/the-loai/${item.slug}?page=1&limit=24`} onClick={closeAll}>{item.name}</Link>
-                    </li>
-                  ))}
+                  {genre
+                    .filter(item => item.name !== 'Phim 18+')
+                    .map(item => (
+                      <li key={item._id} className='text-gray-300 text-[13px] py-1 hover:text-red-400'>
+                        <Link to={`/the-loai/${item.slug}?page=1&limit=24`} onClick={closeAll}>{item.name}</Link>
+                      </li>
+                    ))}
                 </ul>
               )}
             </li>

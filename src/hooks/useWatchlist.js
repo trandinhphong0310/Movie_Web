@@ -71,7 +71,9 @@ export function useWatchlist() {
           saveMeta(movie)
           await addFavMutation(movie.slug).unwrap()
         }
-      } catch {}
+      } catch (error) {
+        console.error('Failed to update watchlist:', error)
+      }
     } else {
       const prev = readLocal()
       const exists = prev.find(m => m.slug === movie.slug)

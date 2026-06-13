@@ -1,10 +1,11 @@
 import { useGetMoviesBySlugCategoryQuery } from '../../redux/services/movieApi'
 import { Link } from 'react-router-dom'
 import MovieItemCard from '../shared/MovieItemCard'
+import { filterNonAdultMovies } from '../../utils/adultFilter'
 
 export default function MovieSection({ slug }) {
     const { data } = useGetMoviesBySlugCategoryQuery({ slug })
-    const movies = data?.items || []
+    const movies = filterNonAdultMovies(data?.items || [])
     const title = data?.breadCrumb?.[0]?.name || ''
 
     return (

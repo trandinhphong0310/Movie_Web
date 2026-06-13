@@ -1,16 +1,10 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { baseQueryWithReauth } from './baseQueryWithReauth'
 
 export const commentApi = createApi({
   reducerPath: 'commentApi',
   tagTypes: ['Comments'],
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_BACKEND_URL,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token')
-      if (token) headers.set('Authorization', `Bearer ${token}`)
-      return headers
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     getComments: builder.query({
       query: (slug) => `/comments/${slug}`,

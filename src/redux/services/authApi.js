@@ -1,16 +1,10 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { baseQueryWithReauth } from './baseQueryWithReauth'
 
 export const authApi = createApi({
     reducerPath: 'authApi',
     tagTypes: ['Profile'],
-    baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_BACKEND_URL,
-        prepareHeaders: (headers) => {
-            const token = localStorage.getItem('token')
-            if (token) headers.set('Authorization', `Bearer ${token}`)
-            return headers
-        },
-    }),
+    baseQuery: baseQueryWithReauth,
     endpoints: (builder) => ({
         register: builder.mutation({
             query: (body) => ({
@@ -25,6 +19,14 @@ export const authApi = createApi({
                 method: 'POST',
                 body,
             }),
+        }),
+        logout: builder.mutation({
+            query: (refreshToken) => ({
+                url: '/users/logout',
+                method: 'POST',
+                body: { refreshToken },
+            }),
+            invalidatesTags: ['Profile'],
         }),
         getProfile: builder.query({
             query: () => '/users/profile',
@@ -41,4 +43,10 @@ export const authApi = createApi({
     }),
 })
 
-export const { useRegisterMutation, useLoginMutation, useGetProfileQuery, useUpdateProfileMutation } = authApi
+export const {
+    useRegisterMutation,
+    useLoginMutation,
+    useLogoutMutation,
+    useGetProfileQuery,
+    useUpdateProfileMutation,
+} = authApi

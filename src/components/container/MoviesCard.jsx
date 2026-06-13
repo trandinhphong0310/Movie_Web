@@ -10,6 +10,7 @@ import EpisodeList from '../shared/EpisodeList'
 import TrailerModal from '../shared/TrailerModal'
 import { SkeletonMovieDetail } from '../shared/SkeletonCard'
 import MovieComment from './movieComment'
+import NotFound from '../pages/NotFound'
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -28,7 +29,7 @@ function InfoRow({ icon, label, value }) {
 
 export default function MoviesCard() {
     const { slug } = useParams()
-    const { movies, category, country, episodes, imdb, actor, trailer_url, loading } = useMovieDetail(slug)
+    const { movies, category, country, episodes, imdb, actor, trailer_url, loading, adultBlocked } = useMovieDetail(slug)
     const { toggle, isIn } = useWatchlist()
     const [showTrailer, setShowTrailer] = useState(false)
 
@@ -39,6 +40,7 @@ export default function MoviesCard() {
     }, [movies?.name])
 
     if (loading || !movies) return <SkeletonMovieDetail />
+    if (adultBlocked) return <NotFound />
 
     const inWatchlist = isIn(slug)
     const historyEntry = getMovieEntry(slug)
@@ -166,7 +168,7 @@ export default function MoviesCard() {
                         {/* Action section */}
                         <div className='mb-8 space-y-2'>
                             {/* Nút xem — full width mobile, auto desktop */}
-                            <Link to={`/xem-phim/${slug}?ep=${startEp}`} className='block sm:inline-block'>
+                            <Link to={`/xem-phim/${slug}?ep=${encodeURIComponent(startEp)}`} className='block sm:inline-block'>
                                 <button className='cursor-pointer w-full sm:w-auto flex gap-2 items-center justify-center
                                     px-6 py-3 rounded-xl text-[15px] font-semibold text-[#1a1600]
                                     bg-gradient-to-r from-[#FECF59] to-[#f59e0b]

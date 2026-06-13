@@ -3,6 +3,7 @@ import { useGetMoviesBySlugCategoryQuery, useGetMoviesDetailQuery } from '../../
 import "slick-carousel/slick/slick.css"
 import "slick-carousel/slick/slick-theme.css"
 import Slider from 'react-slick'
+import { filterNonAdultMovies } from '../../utils/adultFilter'
 
 export default function Banner() {
     const [trailer, setTrailer] = useState('')
@@ -11,7 +12,7 @@ export default function Banner() {
     const base_url = import.meta.env.VITE_BASE_IMG_URL
 
     const { data: bannerData } = useGetMoviesBySlugCategoryQuery({ slug: 'phim-sap-chieu' })
-    const movie = (bannerData?.items || []).slice(0, 5)
+    const movie = filterNonAdultMovies(bannerData?.items || []).slice(0, 5)
 
     const { data: trailerData } = useGetMoviesDetailQuery(trailerSlug, { skip: !trailerSlug })
 
@@ -24,7 +25,7 @@ export default function Banner() {
             alert('Phim chưa có trailer')
             setTrailerSlug(null)
         }
-    }, [trailerData])
+    }, [trailerData, trailerSlug])
 
     const handleWatchTrailer = (slug) => {
         setTrailerSlug(slug)

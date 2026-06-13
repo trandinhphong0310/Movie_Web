@@ -29,7 +29,7 @@ function ContinueCard({ item, onRemove }) {
         onRemove(item.slug)
     }
 
-    const epLink = movie.epName ? `/xem-phim/${movie.slug}?ep=${movie.epName}` : `/xem-phim/${movie.slug}`
+    const epLink = movie.epName ? `/xem-phim/${movie.slug}?ep=${encodeURIComponent(movie.epName)}` : `/xem-phim/${movie.slug}`
 
     return (
         <Link to={epLink} className='group relative'>

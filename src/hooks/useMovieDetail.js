@@ -1,4 +1,5 @@
 import { useGetMoviesDetailQuery, useGetActorForMoviesQuery } from '../redux/services/movieApi'
+import { isAdultMovie } from '../utils/adultFilter'
 
 /**
  * Custom hook to fetch movie detail + actors for a given slug.
@@ -20,6 +21,7 @@ export function useMovieDetail(slug) {
     const peoples = actorData?.peoples || []                  // Avatar actors
     const trailer_url = detailData?.item?.trailer_url || ''
     const loading = loadingDetail || loadingActor
+    const adultBlocked = isAdultMovie(detailData?.item)
 
-    return { movies, category, country, episodes, servers, imdb, tmdb, actor, director, peoples, trailer_url, loading }
+    return { movies, category, country, episodes, servers, imdb, tmdb, actor, director, peoples, trailer_url, loading, adultBlocked }
 }

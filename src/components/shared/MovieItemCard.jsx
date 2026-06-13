@@ -154,6 +154,7 @@ export default function MovieItemCard({ item, layout = 'grid' }) {
         quality: item.quality,
         lang: item.lang,
         episode_current: item.episode_current,
+        category: item.category,
     }
 
     function handleMouseEnter() {

@@ -22,7 +22,7 @@ export default function EpisodeList({ episodes = [], slug, activeEp }) {
                     const isActive = activeEp === item.name
                     return (
                         <li key={index}>
-                            <Link to={`/xem-phim/${slug}?ep=${item.name}`}>
+                            <Link to={`/xem-phim/${slug}?ep=${encodeURIComponent(item.name)}`}>
                                 <div className={`
                                     relative flex items-center justify-center gap-1.5
                                     px-2 py-3 rounded-xl text-[13px] font-medium

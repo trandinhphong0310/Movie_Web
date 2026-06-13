@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLoginMutation } from '../../redux/services/authApi'
+import { notifyAuthChanged, saveAuthTokens } from '../../utils/authTokens'
 
 export default function Login() {
     const navigate = useNavigate()
@@ -21,11 +22,8 @@ export default function Login() {
         }
         try {
             const res = await login(form).unwrap()
-            const token = res.token || res.data?.token || res.access_token
-            if (token) {
-                localStorage.setItem('token', token)
-                window.dispatchEvent(new Event('tokenChange'))
-            }
+            saveAuthTokens(res)
+            notifyAuthChanged()
             navigate('/')
         } catch (err) {
             setError(err?.data?.message || 'Sai tên đăng nhập hoặc mật khẩu.')
