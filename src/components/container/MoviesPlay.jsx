@@ -1,12 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useMovieDetail } from '../../hooks/useMovieDetail'
 import { useWatchHistory } from '../../hooks/useWatchHistory'
+import { getResumeTime, saveProgress, clearProgress } from '../../utils/watchProgress'
 import ActorList from '../shared/ActorList'
 import EpisodeList from '../shared/EpisodeList'
+import VideoPlayer from '../shared/VideoPlayer'
 import { SkeletonPlayer } from '../shared/SkeletonCard'
-import { FaStar, FaArrowLeft, FaClock, FaFilm, FaTimes, FaExpand } from 'react-icons/fa'
+import { FaStar, FaArrowLeft, FaClock, FaFilm, FaTimes, FaExpand, FaCompress, FaStepForward, FaChevronRight } from 'react-icons/fa'
 import NotFound from '../pages/NotFound'
+
+const NEXT_OVERLAY_SECONDS = 90   // hiện overlay "Tập sau" khi còn <= 90s (lúc credits chạy, giống Netflix)
 
 const base_url = import.meta.env.VITE_BASE_IMG_URL
 
@@ -36,13 +40,58 @@ export default function MoviesPlay() {
     const epParam = searchParams.get('ep')
     const currentEpisode = activeServerData.find(e => e.name === epParam) || activeServerData[0] || null
 
+    // Tập kế tiếp (để auto-next + overlay "Tập sau")
+    const currentIdx = activeServerData.findIndex(e => e.name === currentEpisode?.name)
+    const nextEpisode = currentIdx >= 0 ? activeServerData[currentIdx + 1] || null : null
+
+    // Phát native (m3u8) nếu có → mới bắt được sự kiện kết thúc; nếu không thì fallback iframe
+    const useNative = !!currentEpisode?.link_m3u8
+
     // Mini player state
     const playerContainerRef = useRef(null)
     const miniDismissedRef = useRef(false)
     const [isMini, setIsMini] = useState(false)
     const [miniDismissed, setMiniDismissed] = useState(false)
 
-    const iframeRef = useRef(null)
+    const mediaRef = useRef(null)
+    const fsRef = useRef(null)              // bọc video + overlay để fullscreen cùng nhau
+    const [isFullscreen, setIsFullscreen] = useState(false)
+
+    // Overlay "Tập sau" khi gần hết phim
+    const [showNextOverlay, setShowNextOverlay] = useState(false)
+    const lastSaveRef = useRef(0)
+
+    const goToEpisode = useCallback((ep) => {
+        if (ep) navigate(`/xem-phim/${slug}?ep=${encodeURIComponent(ep.name)}`)
+    }, [navigate, slug])
+
+    const resumeTime = useMemo(
+        () => getResumeTime(slug, currentEpisode?.name),
+        [slug, currentEpisode?.name]
+    )
+
+    const handleTimeUpdate = useCallback((current, duration) => {
+        if (!duration) return
+        const remaining = duration - current
+        setShowNextOverlay(remaining <= NEXT_OVERLAY_SECONDS && remaining > 0 && !!nextEpisode)
+        // Lưu tiến độ tối đa mỗi 5s (hoặc khi tua lùi)
+        if (current - lastSaveRef.current >= 5 || current < lastSaveRef.current) {
+            lastSaveRef.current = current
+            saveProgress(slug, currentEpisode?.name, current, duration)
+        }
+    }, [nextEpisode, slug, currentEpisode?.name])
+
+    const handleEnded = useCallback(() => {
+        clearProgress(slug, currentEpisode?.name)
+        setShowNextOverlay(false)
+        if (nextEpisode) goToEpisode(nextEpisode)
+    }, [slug, currentEpisode?.name, nextEpisode, goToEpisode])
+
+    // Reset overlay khi đổi tập
+    useEffect(() => {
+        setShowNextOverlay(false)
+        lastSaveRef.current = 0
+    }, [currentEpisode?.name, slug])
 
     useEffect(() => {
         miniDismissedRef.current = miniDismissed
@@ -67,7 +116,7 @@ export default function MoviesPlay() {
         setIsMini(false)
         setMiniDismissed(false)
         miniDismissedRef.current = false
-    }, [currentEpisode?.link_embed])
+    }, [currentEpisode?.name])
 
     // Lưu lịch sử xem khi bắt đầu xem tập
     useEffect(() => {
@@ -100,13 +149,25 @@ export default function MoviesPlay() {
         setServerIdx(0)
     }, [slug])
 
+    // Đồng bộ state khi vào/thoát fullscreen (kể cả khi nhấn Esc)
+    useEffect(() => {
+        const onChange = () => setIsFullscreen(!!document.fullscreenElement)
+        document.addEventListener('fullscreenchange', onChange)
+        return () => document.removeEventListener('fullscreenchange', onChange)
+    }, [])
+
     const toggleFullscreen = () => {
-        const el = iframeRef.current || playerContainerRef.current
-        if (!el) return
         if (document.fullscreenElement) {
             document.exitFullscreen()
-        } else {
-            el.requestFullscreen?.()
+            return
+        }
+        // Fullscreen cả container (video + overlay) thay vì chỉ thẻ <video>
+        const container = fsRef.current || playerContainerRef.current
+        if (container?.requestFullscreen) {
+            container.requestFullscreen()
+        } else if (mediaRef.current?.webkitEnterFullscreen) {
+            // iOS Safari: chỉ cho fullscreen thẻ <video> (overlay không hiện được — hạn chế của iOS)
+            mediaRef.current.webkitEnterFullscreen()
         }
     }
 
@@ -140,7 +201,8 @@ export default function MoviesPlay() {
 
     const rating = imdb?.vote_average || tmdb?.vote_average || null
 
-    const showMiniPlayer = isMini && !miniDismissed && currentEpisode?.link_embed
+    const hasSource = currentEpisode?.link_m3u8 || currentEpisode?.link_embed
+    const showMiniPlayer = isMini && !miniDismissed && hasSource
 
     return (
         <div className='pt-[60px] md:pt-[120px]'>
@@ -148,11 +210,13 @@ export default function MoviesPlay() {
             {/* ── Video Player Full Width ── */}
             <div ref={playerContainerRef} className='w-full bg-black relative' style={{ aspectRatio: '14/7' }}>
                 {/* Inner div: bình thường fill full, khi mini → fixed ở góc */}
-                <div className={
-                    showMiniPlayer
-                        ? 'fixed bottom-4 right-4 z-[200] w-[300px] sm:w-[360px] bg-black rounded-xl overflow-hidden shadow-2xl border border-white/20'
-                        : 'absolute inset-0'
-                }>
+                <div
+                    ref={fsRef}
+                    className={
+                        showMiniPlayer
+                            ? 'fixed bottom-4 right-4 z-[200] w-[300px] sm:w-[360px] bg-black rounded-xl overflow-hidden shadow-2xl border border-white/20'
+                            : 'group/player absolute inset-0 bg-black'
+                    }>
                     {showMiniPlayer && (
                         <div className='absolute top-2 right-2 z-10 flex gap-1.5'>
                             <button
@@ -171,9 +235,21 @@ export default function MoviesPlay() {
                             </button>
                         </div>
                     )}
-                    {currentEpisode?.link_embed ? (
+                    {useNative ? (
+                        <VideoPlayer
+                            ref={mediaRef}
+                            key={currentEpisode.link_m3u8}
+                            src={currentEpisode.link_m3u8}
+                            startTime={resumeTime}
+                            onTimeUpdate={handleTimeUpdate}
+                            onEnded={handleEnded}
+                            title={`${movies.name} - Tập ${currentEpisode.name}`}
+                            poster={`${base_url}/${movies.thumb_url}`}
+                            className={showMiniPlayer ? 'w-full aspect-video block bg-black' : 'absolute inset-0 w-full h-full bg-black'}
+                        />
+                    ) : currentEpisode?.link_embed ? (
                         <iframe
-                            ref={iframeRef}
+                            ref={mediaRef}
                             key={currentEpisode.link_embed}
                             src={currentEpisode.link_embed}
                             frameBorder='0'
@@ -186,6 +262,42 @@ export default function MoviesPlay() {
                         <div className='flex items-center justify-center h-full text-white/40 text-sm'>
                             Không có nguồn phát
                         </div>
+                    )}
+
+                    {/* Overlay "Tập sau" kiểu Netflix — chỉ hiện với player native khi gần hết phim */}
+                    {useNative && showNextOverlay && nextEpisode && (
+                        <button
+                            onClick={() => goToEpisode(nextEpisode)}
+                            className='group absolute bottom-20 right-5 z-30 flex items-center gap-3 cursor-pointer
+                                rounded-xl border border-white/15 bg-black/60 backdrop-blur-md pl-3 pr-4 py-2.5
+                                shadow-2xl animate-slideInRight transition-all duration-200
+                                hover:bg-black/80 hover:border-white/40 hover:scale-[1.04] active:scale-95'
+                        >
+                            <span className='flex items-center justify-center w-9 h-9 flex-shrink-0 rounded-full
+                                bg-red-600 text-white group-hover:bg-red-500 transition-colors'>
+                                <FaStepForward size={13} className='ml-0.5' />
+                            </span>
+                            <span className='text-left leading-tight'>
+                                <span className='block text-[10px] uppercase tracking-wider text-white/50'>Tập tiếp theo</span>
+                                <span className='block text-white text-[14px] font-semibold'>Tập {nextEpisode.name}</span>
+                            </span>
+                            <FaChevronRight size={12}
+                                className='text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all duration-200' />
+                        </button>
+                    )}
+
+                    {/* Nút fullscreen riêng (fullscreen cả container để overlay vẫn hiện) */}
+                    {useNative && !showMiniPlayer && (
+                        <button
+                            onClick={toggleFullscreen}
+                            title={isFullscreen ? 'Thoát toàn màn hình (F)' : 'Toàn màn hình (F)'}
+                            className='absolute top-3 right-3 z-30 w-10 h-10 flex items-center justify-center
+                                rounded-full bg-black/60 backdrop-blur-sm text-white cursor-pointer
+                                opacity-80 hover:opacity-100 hover:bg-black/85 hover:scale-110
+                                transition-all duration-200'
+                        >
+                            {isFullscreen ? <FaCompress size={15} /> : <FaExpand size={15} />}
+                        </button>
                     )}
                 </div>
             </div>

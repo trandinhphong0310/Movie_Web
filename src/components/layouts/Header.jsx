@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { FaSearch, FaChevronDown, FaBars, FaUser, FaTimes, FaMicrophone, FaHeart, FaHistory } from 'react-icons/fa'
 import { useGetMoviesGenreQuery, useGetMoviesCountryQuery, useSearchMoviesByKeyWordsQuery } from '../../redux/services/movieApi'
 import { useGetProfileQuery, useLogoutMutation } from '../../redux/services/authApi'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { filterNonAdultMovies } from '../../utils/adultFilter'
 import { clearAuthTokens, getRefreshToken, notifyAuthChanged } from '../../utils/authTokens'
 
@@ -41,6 +41,8 @@ export default function Header() {
   const { data: genre = [] } = useGetMoviesGenreQuery()
   const { data: country = [] } = useGetMoviesCountryQuery()
   const [scroll, setScrolled] = useState(false)
+  const [hidden, setHidden] = useState(false)
+  const lastScrollY = useRef(0)
   const [searchMovies, setSearchMovies] = useState([])
   const [keywords, setKeywords] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -48,6 +50,8 @@ export default function Header() {
   const [countryOpen, setCountryOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const isWatchPage = location.pathname.startsWith('/xem-phim')
   const base_url = import.meta.env.VITE_BASE_IMG_URL
   const searchRef = useRef(null)
   const [logout] = useLogoutMutation()
@@ -104,10 +108,36 @@ export default function Header() {
   }, [searchData, keywords])
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50)
-    window.addEventListener('scroll', handleScroll)
+    const handleScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 50)
+
+      // Đang mở menu/tìm kiếm thì luôn hiện header
+      if (menuOpen || searchOpen) {
+        setHidden(false)
+        lastScrollY.current = y
+        return
+      }
+      if (isWatchPage) {
+        // Trang xem phim: chỉ hiện header khi ở sát đỉnh, cuộn xuống là ẩn ngay
+        // (tránh việc cuộn lên xem video lại bị header che)
+        setHidden(y > 10)
+      } else {
+        // Trang khác: cuộn xuống ẩn, cuộn lên hiện
+        if (y > lastScrollY.current && y > 120) setHidden(true)
+        else if (y < lastScrollY.current) setHidden(false)
+      }
+      lastScrollY.current = y
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [menuOpen, searchOpen, isWatchPage])
+
+  // Đổi trang → hiện lại header & đồng bộ mốc cuộn
+  useEffect(() => {
+    setHidden(false)
+    lastScrollY.current = window.scrollY
+  }, [location.pathname])
 
   useEffect(() => {
     const handler = (e) => {
@@ -137,7 +167,8 @@ export default function Header() {
   }
 
   return (
-    <header className={`flex items-center justify-between px-4 md:px-10 lg:px-16 z-50 w-full fixed transition-all duration-300 ease-in-out
+    <header className={`flex items-center justify-between px-4 md:px-10 lg:px-16 z-50 w-full fixed top-0 transition-all duration-300 ease-in-out
+      ${hidden ? '-translate-y-full' : 'translate-y-0'}
       ${scroll ? 'bg-[#0f111a] h-[60px] md:h-[70px]' : 'bg-[rgba(34,34,34,0.6)] h-[70px] md:h-[90px]'}`}>
 
       <Link to="/" onClick={closeAll} className={`flex items-center gap-2 flex-shrink-0 ${searchOpen ? 'hidden' : 'block'}`}>

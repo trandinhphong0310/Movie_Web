@@ -7,6 +7,27 @@ body {
   background-color: #161616;
 }
 
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.22s ease-out both;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slideInRight {
+  animation: slideInRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Ẩn nút fullscreen mặc định của trình duyệt — dùng nút riêng để fullscreen cả
+   container (kèm overlay "Tập sau"), thay vì chỉ phóng to thẻ <video>. */
+video::-webkit-media-controls-fullscreen-button { display: none; }
+
 @layer components {
   .header-movies {
     @apply flex items-center justify-between;
