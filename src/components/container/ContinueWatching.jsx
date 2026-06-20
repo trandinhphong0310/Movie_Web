@@ -57,12 +57,12 @@ function ContinueCard({ item, onRemove }) {
                 )}
                 <button
                     onClick={handleRemove}
-                    className='absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/60 text-gray-300
-                        opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center
-                        hover:bg-red-600 hover:text-white'
+                    className='absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70
+                        md:opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center
+                        hover:bg-red-500 hover:text-white hover:border-red-500 shadow-lg'
                     title='Xóa khỏi lịch sử'
                 >
-                    <FaTimes size={8} />
+                    <FaTimes size={10} />
                 </button>
             </div>
             <p className='text-gray-300 text-[12px] mt-1.5 line-clamp-2 leading-tight group-hover:text-white transition-colors'>

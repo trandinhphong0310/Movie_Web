@@ -17,11 +17,7 @@ function timeAgo(ts) {
 }
 
 function HistoryCard({ item, onRemove }) {
-    // item from API: { slug, epName, watchedAt } — no name/thumb_url
-    // item from localStorage: full data
     const needsFetch = !item.thumb_url
-
-    // Check localStorage cache first (fast, no network)
     const localEntry = needsFetch ? readHistory().find(h => h.slug === item.slug) : null
     const hasLocal = !!(localEntry?.thumb_url)
 
@@ -40,53 +36,57 @@ function HistoryCard({ item, onRemove }) {
         }
     }
 
-    if (!movie) return (
+    if (isLoading && !movie) return (
         <div className='animate-pulse'>
             <div className='rounded-lg aspect-[2/3] bg-white/5' />
-            <div className='h-3 bg-white/5 rounded mt-2 w-3/4' />
-            <div className='h-2 bg-white/5 rounded mt-1 w-1/2' />
+            <div className='h-3 bg-white/5 rounded mt-3 w-3/4' />
+            <div className='h-2 bg-white/5 rounded mt-2 w-1/2' />
         </div>
     )
 
-    const epLink = movie.epName ? `/xem-phim/${movie.slug}?ep=${encodeURIComponent(movie.epName)}` : `/xem-phim/${movie.slug}`
+    const safeMovie = movie || item
+    const displayName = safeMovie.name || safeMovie.slug || 'Phim không xác định'
+    const displayThumb = safeMovie.thumb_url ? `${base_url}/${safeMovie.thumb_url}` : 'https://placehold.co/400x600/2f3346/white?text=No+Image'
+    const epLink = safeMovie.epName ? `/xem-phim/${safeMovie.slug}?ep=${encodeURIComponent(safeMovie.epName)}` : `/xem-phim/${safeMovie.slug}`
 
     return (
         <div className='group relative'>
             <Link to={epLink}>
-                <div className='relative overflow-hidden rounded-lg aspect-[2/3]'>
+                <div className='relative overflow-hidden rounded-lg aspect-[2/3] bg-[#2f3346]'>
                     <img
-                        src={`${base_url}/${movie.thumb_url}`}
-                        alt={movie.name}
+                        src={displayThumb}
+                        alt={displayName}
                         loading='lazy'
-                        className='w-full h-full object-cover group-hover:scale-105 transition duration-300'
+                        className='w-full h-full object-cover group-hover:scale-105 transition duration-500'
                     />
-                    <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center'>
-                        <div className='w-10 h-10 rounded-full bg-red-500/90 flex items-center justify-center'>
-                            <FaPlay className='text-white text-sm ml-0.5' />
+                    <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center'>
+                        <div className='w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-300'>
+                            <FaPlay className='text-white text-sm ml-1' />
                         </div>
                     </div>
-                    {movie.epName && (
+                    {safeMovie.epName && (
                         <div className='absolute bottom-2 left-2'>
-                            <span className='text-[11px] px-2 py-0.5 bg-red-500/90 text-white rounded font-medium'>
-                                Tập {movie.epName}
+                            <span className='text-[11px] px-2 py-0.5 bg-red-500/90 backdrop-blur-sm text-white rounded font-medium shadow-lg'>
+                                Tập {safeMovie.epName}
                             </span>
                         </div>
                     )}
                 </div>
-                <h3 className='text-white text-[13px] font-medium mt-2 line-clamp-2 leading-snug'>
-                    {movie.name}
+                <h3 className='text-white text-[13px] font-medium mt-3 line-clamp-2 leading-snug group-hover:text-red-400 transition-colors'>
+                    {displayName}
                 </h3>
-                <p className='text-gray-600 text-[11px] mt-0.5'>
-                    {timeAgo(movie.watchedAt)}
+                <p className='text-white/40 text-[11px] mt-1'>
+                    {timeAgo(safeMovie.watchedAt)}
                 </p>
             </Link>
             <button
-                onClick={() => onRemove(movie.slug)}
-                className='absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white
-                    opacity-0 group-hover:opacity-100 transition flex items-center justify-center
-                    hover:bg-red-500'
+                onClick={() => onRemove(safeMovie.slug)}
+                className='absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70
+                    md:opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center
+                    hover:bg-red-500 hover:text-white hover:border-red-500 hover:scale-110 shadow-lg'
+                title='Xóa khỏi lịch sử'
             >
-                <FaTrash size={10} />
+                <FaTrash size={12} />
             </button>
         </div>
     )
@@ -107,16 +107,16 @@ export default function WatchHistory() {
                 <div className='flex items-center gap-3'>
                     <FaClock className='text-red-400 text-xl' />
                     <h1 className='text-white text-[24px] font-bold'>Lịch sử xem</h1>
-                    {history.length > 0 && (
+                    {history.length > 1 && (
                         <span className='text-gray-500 text-[14px]'>({history.length} phim)</span>
                     )}
                 </div>
-                {history.length > 0 && (
+                {history.length > 1 && (
                     <button
                         onClick={handleClear}
-                        className='flex items-center gap-2 px-4 py-2 rounded-lg text-[13px]
-                            bg-white/5 border border-white/10 text-gray-400
-                            hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 transition'
+                        className='flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium
+                            bg-white/5 border border-white/10 text-white/60 backdrop-blur-sm
+                            hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 transition-all duration-300'
                     >
                         <FaTrash size={12} /> Xóa tất cả
                     </button>
@@ -128,20 +128,16 @@ export default function WatchHistory() {
                     {Array.from({ length: 6 }).map((_, i) => (
                         <div key={i} className='animate-pulse'>
                             <div className='rounded-lg aspect-[2/3] bg-white/5' />
-                            <div className='h-3 bg-white/5 rounded mt-2 w-3/4' />
+                            <div className='h-3 bg-white/5 rounded mt-3 w-3/4' />
                         </div>
                     ))}
                 </div>
             ) : history.length === 0 ? (
-                <div className='flex flex-col items-center justify-center py-24 gap-4'>
-                    <FaClock className='text-white/10 text-6xl' />
-                    <p className='text-gray-500 text-[16px]'>Chưa có lịch sử xem</p>
-                    <Link to='/' className='text-red-400 hover:text-red-300 text-[14px] transition'>
-                        Khám phá phim ngay →
-                    </Link>
+                <div className='flex items-center justify-center py-24'>
+                    <p className='text-white/50 text-[16px]'>Bạn chưa có lịch sử xem phim nào</p>
                 </div>
             ) : (
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4'>
+                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-4'>
                     {history.map(item => (
                         <HistoryCard key={item.slug} item={item} onRemove={removeHistory} />
                     ))}

@@ -205,7 +205,7 @@ export default function MoviesPlay() {
     const showMiniPlayer = isMini && !miniDismissed && hasSource
 
     return (
-        <div className='pt-[60px] md:pt-[120px]'>
+        <div className='pt-[70px] md:pt-[120px]'>
 
             {/* ── Video Player Full Width ── */}
             <div ref={playerContainerRef} className='w-full bg-black relative' style={{ aspectRatio: '14/7' }}>

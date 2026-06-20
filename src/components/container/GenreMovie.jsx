@@ -28,6 +28,7 @@ export default function GenreMovie() {
     const keep = { limit, country, year, sort }
     const handlePrev = () => setSearchParams({ ...keep, page: page - 1 })
     const handleNext = () => setSearchParams({ ...keep, page: page + 1 })
+    const handleGoto = (p) => setSearchParams({ ...keep, page: p })
 
     if (adultBlocked) return <NotFound />
 
@@ -36,7 +37,7 @@ export default function GenreMovie() {
             <h2 className='font-semibold text-white text-[22px] sm:text-[28px] py-4'>{title}</h2>
             <FilterBar pageType='the-loai' />
             <MovieGrid movies={movies} loading={isFetching} />
-            <Pagination page={page} totalPage={totalPage} onPrev={handlePrev} onNext={handleNext} />
+            <Pagination page={page} totalPage={totalPage} onPrev={handlePrev} onNext={handleNext} onGoto={handleGoto} />
         </div>
     )
 }
